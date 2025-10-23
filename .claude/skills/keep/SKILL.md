@@ -321,6 +321,102 @@ See `scripts/score_issues.py` for scoring implementation.
 
 ---
 
+### 8. Zero-Issues Project Initialization
+
+**When to trigger:**
+- `/keep:start` called without issue number
+- `gh issue list` returns empty array
+- User asks "what should I work on?" with no open issues
+
+**Three-phase workflow using Claude's native tools:**
+
+**Phase 1: Discovery**
+
+Check for CLAUDE.md context:
+- If root CLAUDE.md missing/stale: Offer `/keep:grow .` first
+- Ensure project context loaded before suggesting work
+
+Find planning documents (use Glob):
+- `{ROADMAP,TODO,PLAN,BACKLOG,VISION,CONTRIBUTING}*.md`
+- Read found docs, parse list items and checkboxes (- [ ] patterns)
+- Extract actionable items with source file and line numbers
+
+Scan codebase signals (use Grep):
+- Pattern: `TODO:|FIXME:|HACK:|BUG:` with `-n` for line numbers, `-B 1 -A 1` for context
+- Categorize by type: FIXME/BUG (high priority), TODO (medium), HACK (refactor)
+
+Assess test coverage (use Glob):
+- Find tests: `**/*.{test,spec}.{js,ts,py,go,rs}`
+- Find source: `{src,lib}/**/*.{js,ts,py,go,rs}`
+- Identify directories with missing test coverage
+
+**Phase 2: Synthesis**
+
+Prioritize findings:
+1. Planning docs (ROADMAP, etc.) - highest priority
+2. FIXME/BUG comments - important fixes
+3. TODO comments - planned improvements
+4. Missing tests - quality improvements
+5. Documentation gaps - lower priority
+
+Generate 3-5 issue suggestions with:
+- Clear, actionable title
+- Full description with context
+- **Source attribution** (file:line or document name)
+- Suggested labels (enhancement, bug, testing, documentation)
+- Affected files if known
+
+**Phase 3: Interactive Creation**
+
+Present findings conversationally (example):
+
+```markdown
+I notice you don't have any open issues. Let me help find starter work!
+
+📚 Project context: ✅ CLAUDE.md found
+
+📋 Planning documents:
+   • ROADMAP.md: 5 planned features
+   • TODO.md: 3 pending tasks
+
+🔍 Codebase analysis:
+   • 12 TODO/FIXME comments
+   • 8 files missing tests
+
+🎯 5 Starter Issue Suggestions:
+
+1. **Implement user authentication** [enhancement, high]
+   Source: ROADMAP.md line 15
+
+2. **Fix rate limiting in API** [bug, medium]
+   Source: FIXME in src/api/routes.ts:34
+
+3. **Add tests for payment module** [testing, medium]
+   Source: Missing coverage in src/payments/
+
+Which issues should I create? [all / 1,2,3 / none - work locally]
+```
+
+For each selected issue:
+- Generate natural issue body (describe what, why, where, source)
+- Create via `gh issue create --title "..." --body "..." --label "..."`
+- Display created issue URL
+
+Ask which to start, then transition to normal `/keep:start {number}` workflow.
+
+**Graceful degradation:**
+- No planning docs → Focus on code signals
+- No TODOs → Focus on test coverage
+- Nothing found → Suggest `/keep:grow` or manual issue creation
+- Offline → Work locally, sync later
+
+**Philosophy:**
+- Source transparency (always show where suggestions came from)
+- User control (select which issues to create)
+- Natural generation (no templates needed)
+
+---
+
 ## Workflow Intelligence
 
 ### Starting Work

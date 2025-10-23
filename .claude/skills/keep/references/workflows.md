@@ -727,6 +727,234 @@ Does this look correct? [yes / no]
 
 ---
 
+## Workflow 5: Zero-Issues Project Initialization
+
+### User Invocation
+```
+User: /keep:start
+```
+
+With no issue number and no open GitHub issues.
+
+### System Flow
+
+```
+┌─────────────────────────────────────────────────────┐
+│ 1. Check CLAUDE.md Context                          │
+│    ├─ Look for root CLAUDE.md                       │
+│    ├─ If missing/stale: Offer /keep:grow first      │
+│    └─ Ensure project context loaded                 │
+└──────────────┬──────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────┐
+│ 2. Discovery (using native tools)                   │
+│    Planning docs (Glob):                            │
+│    ├─ {ROADMAP,TODO,PLAN,VISION}*.md                │
+│    └─ Read and parse list items, checkboxes         │
+│                                                      │
+│    Code signals (Grep):                             │
+│    ├─ Pattern: TODO:|FIXME:|HACK:|BUG:              │
+│    └─ Extract with line numbers                     │
+│                                                      │
+│    Test coverage (Glob):                            │
+│    ├─ Find tests: **/*.{test,spec}.*                │
+│    └─ Find source: src/**/*                         │
+└──────────────┬──────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────┐
+│ 3. Synthesize Suggestions                           │
+│    ├─ Priority: roadmap > FIXME > TODO > tests      │
+│    ├─ Generate 3-5 actionable suggestions           │
+│    ├─ Include source attribution                    │
+│    └─ Suggest labels and priorities                 │
+└──────────────┬──────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────┐
+│ 4. Present & Create Issues                          │
+│    ├─ Show findings conversationally                │
+│    ├─ User selects which to create                  │
+│    ├─ Generate natural issue bodies                 │
+│    ├─ Create via gh issue create                    │
+│    └─ Display created issue URLs                    │
+└──────────────┬──────────────────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────────────────┐
+│ 5. Start Work                                       │
+│    ├─ Ask: "Which issue to start?"                  │
+│    ├─ Transition to normal /keep:start workflow     │
+│    └─ Load context, create work file                │
+└─────────────────────────────────────────────────────┘
+```
+
+### Example Output
+
+```
+┌────────────────────────────────────────┐
+│ 👋 Welcome to Keep!                    │
+│                                         │
+│ I notice you don't have any GitHub     │
+│ issues yet. Let me help you get        │
+│ started!                               │
+│                                         │
+│ 📚 Checking project context...         │
+│    ✅ Found CLAUDE.md (current)        │
+│                                         │
+│ 📋 Searching for planning documents... │
+│    ✅ Found ROADMAP.md with 5 features │
+│    ✅ Found TODO.md with 3 tasks       │
+│                                         │
+│ 🔍 Analyzing codebase...               │
+│    • 12 TODO comments found            │
+│    • 8 files missing test coverage     │
+│    • 3 modules need documentation      │
+│                                         │
+│ 🎯 Synthesized 5 starter issues:       │
+│                                         │
+│ 1. **Implement user authentication**   │
+│    [feature, high]                     │
+│    Source: ROADMAP.md line 15          │
+│    Files: src/auth/                    │
+│                                         │
+│ 2. **Add error handling to API         │
+│    endpoints** [bug, high]             │
+│    Source: TODO in src/api/routes.ts:34│
+│    Files: src/api/routes.ts            │
+│                                         │
+│ 3. **Write tests for payment module**  │
+│    [test, medium]                      │
+│    Source: Missing test coverage       │
+│    Files: tests/payments/              │
+│                                         │
+│ 4. **Document database schema**        │
+│    [docs, medium]                      │
+│    Source: Undocumented src/db/        │
+│    Files: docs/, src/db/               │
+│                                         │
+│ 5. **Refactor user service**           │
+│    [refactor, low]                     │
+│    Source: TODO in src/services/user.ts│
+│    Files: src/services/user.ts         │
+│                                         │
+│ Which issues should I create?          │
+│ [all / 1,2,3 / custom]                 │
+└────────────────────────────────────────┘
+
+User: 1,2,3
+
+┌────────────────────────────────────────┐
+│ Creating issues...                     │
+│                                         │
+│ ✅ Created #1: Implement user          │
+│    authentication                      │
+│    https://github.com/user/repo/       │
+│    issues/1                            │
+│                                         │
+│ ✅ Created #2: Add error handling to   │
+│    API endpoints                       │
+│    https://github.com/user/repo/       │
+│    issues/2                            │
+│                                         │
+│ ✅ Created #3: Write tests for payment │
+│    module                              │
+│    https://github.com/user/repo/       │
+│    issues/3                            │
+│                                         │
+│ 🎉 Created 3 issues!                   │
+│                                         │
+│ Which issue would you like to start    │
+│ working on?                            │
+│ [1 / 2 / 3]                            │
+└────────────────────────────────────────┘
+
+User: 1
+
+┌────────────────────────────────────────┐
+│ ✅ Ready to work on issue #1           │
+│                                         │
+│ 📋 Issue: Implement user authentication│
+│ 🏷️  Labels: feature, enhancement      │
+│                                         │
+│ 📚 Context loaded:                     │
+│ ├─ CLAUDE.md (project overview)        │
+│ └─ ROADMAP.md (source document)        │
+│                                         │
+│ 💡 From roadmap:                       │
+│ Implement JWT-based authentication     │
+│ with refresh tokens. Should support    │
+│ login, logout, and password reset.     │
+│                                         │
+│ Suggested approach:                    │
+│ Based on project structure, implement  │
+│ in src/auth/ using existing patterns. │
+│                                         │
+│ Where would you like to start?         │
+└────────────────────────────────────────┘
+```
+
+### Handling Different Scenarios
+
+#### Scenario A: No Planning Docs, Many TODOs
+
+```
+📋 Searching for planning documents...
+   ℹ️  No planning documents found
+
+🔍 Analyzing codebase...
+   • 25 TODO comments found
+   • 15 files missing tests
+
+🎯 Suggestions based on codebase analysis:
+
+1. **Fix authentication rate limiting**
+   Source: FIXME in src/auth/middleware.ts:45
+   ...
+```
+
+#### Scenario B: Planning Docs, No TODO Comments
+
+```
+📋 Searching for planning documents...
+   ✅ Found ROADMAP.md with 8 features
+   ✅ Found VISION.md
+
+🔍 Analyzing codebase...
+   • No TODO comments found
+   • 3 files missing tests
+
+🎯 Suggestions from roadmap:
+
+1. **Add real-time notifications**
+   Source: ROADMAP.md - Q1 Features
+   ...
+```
+
+#### Scenario C: Nothing Found
+
+```
+📋 Searching for planning documents...
+   ℹ️  No planning documents found
+
+🔍 Analyzing codebase...
+   • No TODO comments found
+   • No obvious gaps detected
+
+💭 No automated suggestions available.
+
+Would you like to:
+1. Create a ROADMAP.md to plan features
+2. Create an issue manually
+3. Use /keep:grow to document code first
+4. Work in local-only mode
+
+What would you prefer?
+```
+
+---
+
 ## Summary
 
 These workflows show Keep in action:
@@ -735,5 +963,6 @@ These workflows show Keep in action:
 - **Done**: Summarize, sync to GitHub, archive, recommend next
 - **Next**: Score open issues, recommend based on context and continuity
 - **Grow**: Create CLAUDE.md when patterns emerge
+- **Zero-Issues Init**: Discover work using native tools (Glob/Grep), synthesize suggestions, create issues naturally
 
 All workflows degrade gracefully when GitHub unavailable, preserve user data, and respect user control through approval gates.

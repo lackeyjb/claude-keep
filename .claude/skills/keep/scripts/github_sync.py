@@ -176,6 +176,74 @@ def close_issue(issue_number: str, reason: Optional[str] = None) -> Dict[str, An
     return gh_command(args)
 
 
+def create_issue(
+    title: str,
+    body: str,
+    labels: Optional[List[str]] = None,
+    milestone: Optional[str] = None,
+    assignees: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Create a new GitHub issue
+
+    Args:
+        title: Issue title
+        body: Issue body (markdown)
+        labels: List of label names
+        milestone: Milestone name or number
+        assignees: List of GitHub usernames
+
+    Returns:
+        Created issue data
+
+    Raises:
+        GitHubError: If creation fails
+    """
+    args = ['issue', 'create', '--title', title, '--body', body]
+
+    if labels:
+        for label in labels:
+            args.extend(['--label', label])
+
+    if milestone:
+        args.extend(['--milestone', milestone])
+
+    if assignees:
+        for assignee in assignees:
+            args.extend(['--assignee', assignee])
+
+    return gh_command(args)
+
+
+def list_labels() -> List[Dict[str, Any]]:
+    """
+    List repository labels
+
+    Returns:
+        List of label data with name, description, color
+    """
+    return gh_command([
+        'label', 'list',
+        '--json', 'name,description,color'
+    ])
+
+
+def list_milestones(state: str = 'open') -> List[Dict[str, Any]]:
+    """
+    List repository milestones
+
+    Args:
+        state: Milestone state ('open', 'closed', 'all')
+
+    Returns:
+        List of milestone data
+    """
+    return gh_command([
+        'api', 'repos/{owner}/{repo}/milestones',
+        '-f', f'state={state}'
+    ])
+
+
 def parse_dependencies(issue_body: str) -> List[str]:
     """
     Parse dependency references from issue body
@@ -265,6 +333,21 @@ def main():
     close_parser.add_argument('number', help='Issue number')
     close_parser.add_argument('--reason', help='Closing reason')
 
+    # create-issue command
+    create_parser = subparsers.add_parser('create-issue', help='Create issue')
+    create_parser.add_argument('title', help='Issue title')
+    create_parser.add_argument('body', help='Issue body')
+    create_parser.add_argument('--label', action='append', help='Label to add (can be repeated)')
+    create_parser.add_argument('--milestone', help='Milestone')
+    create_parser.add_argument('--assignee', action='append', help='Assignee (can be repeated)')
+
+    # list-labels command
+    subparsers.add_parser('list-labels', help='List repository labels')
+
+    # list-milestones command
+    milestones_parser = subparsers.add_parser('list-milestones', help='List milestones')
+    milestones_parser.add_argument('--state', default='open', choices=['open', 'closed', 'all'])
+
     # check command
     subparsers.add_parser('check', help='Check gh CLI availability')
 
@@ -285,6 +368,24 @@ def main():
 
         elif args.command == 'close-issue':
             result = close_issue(args.number, args.reason)
+            print(json.dumps(result, indent=2))
+
+        elif args.command == 'create-issue':
+            result = create_issue(
+                title=args.title,
+                body=args.body,
+                labels=args.label,
+                milestone=args.milestone,
+                assignees=args.assignee
+            )
+            print(json.dumps(result, indent=2))
+
+        elif args.command == 'list-labels':
+            result = list_labels()
+            print(json.dumps(result, indent=2))
+
+        elif args.command == 'list-milestones':
+            result = list_milestones(args.state)
             print(json.dumps(result, indent=2))
 
         elif args.command == 'check':

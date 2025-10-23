@@ -15,10 +15,19 @@ Invoke the Keep skill by loading `.claude/skills/keep/SKILL.md` to start work on
 {{#if args}}
 Issue number: {{args}}
 {{else}}
-No issue number provided. The Keep skill should either:
-1. Ask the user for an issue number
-2. Offer to recommend next work using the scoring algorithm
-3. Allow the user to work without issue tracking (local-only)
+No issue number provided. Keep will help you discover starter work:
+
+**The Zero-Issues Workflow:**
+
+1. **Discover** - Search for planning docs (ROADMAP.md, TODO.md) and code signals (TODO/FIXME comments, missing tests) using native Glob/Grep tools
+
+2. **Synthesize** - Prioritize findings into 3-5 actionable issue suggestions with source attribution
+
+3. **Create** - User selects which issues to create, Keep generates natural issue bodies and creates them via GitHub
+
+4. **Start** - User picks which issue to work on, Keep loads context and begins normal workflow
+
+This uses Claude's native capabilities to analyze your project intelligently. See SKILL.md Section 8 for detailed workflow.
 {{/if}}
 
 ## Instructions

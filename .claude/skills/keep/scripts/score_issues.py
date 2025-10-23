@@ -275,12 +275,39 @@ def score_all_issues(
     return sorted(scored, key=lambda x: x['total_score'], reverse=True)
 
 
+def handle_zero_issues(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Handle case when no issues exist
+
+    Args:
+        context: Context dict from parse_state_file
+
+    Returns:
+        Dict with zero-issues status and next steps
+    """
+    return {
+        'status': 'no_issues',
+        'message': 'No issues found in repository',
+        'suggested_action': 'initialize_project',
+        'next_steps': [
+            'Check CLAUDE.md files are current',
+            'Search for planning documents (ROADMAP.md, TODO.md, etc.)',
+            'Analyze codebase for improvement opportunities',
+            'Create 3-5 starter issues based on findings',
+            'Start work on chosen issue'
+        ],
+        'recommendations': []
+    }
+
+
 def format_recommendations(scored_issues: List[Dict[str, Any]], top_n: int = 5) -> str:
     """
     Format scored issues as recommendations
     """
     if not scored_issues:
-        return "No issues to recommend"
+        zero_result = handle_zero_issues({})
+        return zero_result['message'] + "\n\nSuggested next steps:\n" + \
+               '\n'.join(f"  {i+1}. {step}" for i, step in enumerate(zero_result['next_steps']))
 
     lines = ["🎯 Recommended Next Work\n"]
 
