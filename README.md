@@ -27,7 +27,12 @@ Keep is a skill + commands system for Claude Code that provides:
 
 1. Copy `.claude/` directory to your project root
 2. Ensure you have `gh` CLI installed (optional, for GitHub integration)
-3. Start using commands!
+3. Create initial project context:
+   ```bash
+   /keep:grow .
+   ```
+   Keep will analyze your project and suggest creating a root CLAUDE.md with tech stack, architecture, and conventions.
+4. Start using commands!
 
 ### Directory Structure
 
@@ -44,7 +49,8 @@ your-project/
     ├── commands/
     │   ├── keep-start.md        # Start work command
     │   ├── keep-save.md         # Save progress command
-    │   └── keep-done.md         # Complete work command
+    │   ├── keep-done.md         # Complete work command
+    │   └── keep-grow.md         # Grow context command
     └── skills/keep/
         ├── SKILL.md             # Keep skill intelligence
         ├── references/          # File format specs, workflows
@@ -114,6 +120,33 @@ Complete work and sync to GitHub.
 - `--no-close` - Leave issue open
 - `--no-sync` - Skip GitHub interaction
 - `--no-recommend` - Skip next work suggestions
+
+### `/keep:grow [directory]`
+
+Create or update CLAUDE.md files for project context.
+
+```bash
+/keep:grow .           # Analyze project root
+/keep:grow src/auth    # Analyze specific module
+/keep:grow --update    # Update existing CLAUDE.md
+```
+
+**What it does:**
+- Analyzes directory for patterns and abstractions
+- Assesses if CLAUDE.md would be valuable
+- Generates complete CLAUDE.md proposal
+- Shows proposal for review/editing
+- Creates file if approved
+
+**When to use:**
+- Initial setup on existing project (create root CLAUDE.md)
+- Document a module after patterns emerge
+- Update existing CLAUDE.md with new learnings
+- Manually trigger if automatic suggestion was missed
+
+**Flags:**
+- `--update` - Update existing CLAUDE.md
+- `--force` - Create even if patterns unclear
 
 ## Example Workflow
 
@@ -243,11 +276,19 @@ gh issue list --json number,title,labels,body,updatedAt | \
 
 ### Context Growth
 
-Manually trigger CLAUDE.md creation:
+Manually trigger CLAUDE.md creation or updates:
 ```bash
-# Keep skill can analyze directories and suggest CLAUDE.md
-# (This feature invoked automatically during /keep:save when patterns emerge)
+# Analyze and create root CLAUDE.md
+/keep:grow .
+
+# Document a specific module
+/keep:grow src/auth
+
+# Update existing CLAUDE.md with new patterns
+/keep:grow src/api --update
 ```
+
+Keep also suggests CLAUDE.md updates automatically during `/keep:save` when patterns emerge (3+ decisions in same area).
 
 ## Configuration
 
@@ -274,7 +315,7 @@ To customize behavior, edit the skill file to adjust:
 
 | Feature | Keep | Complex PM Tools |
 |---------|------|------------------|
-| Commands | 3 core | 50+ |
+| Commands | 4 core | 50+ |
 | Files to manage | Minimal | Hundreds |
 | Setup time | < 5 minutes | Hours |
 | Context loaders | Native CLAUDE.md | Custom |
