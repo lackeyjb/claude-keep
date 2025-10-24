@@ -1,4 +1,8 @@
+# Keep-specific files (user data)
 .claude/settings.local.json
+.claude/work/
+.claude/archive/
+.claude/state.md
 
 # Python
 __pycache__/
@@ -11,3 +15,14 @@ __pycache__/
 venv/
 env/
 .venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
