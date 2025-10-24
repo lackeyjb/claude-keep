@@ -29,7 +29,7 @@ Keep is a skill + commands system for Claude Code that provides:
 2. Ensure you have `gh` CLI installed (optional, for GitHub integration)
 3. Create initial project context:
    ```bash
-   /keep:grow .
+   /keep-grow .
    ```
    Keep will analyze your project and suggest creating a root CLAUDE.md with tech stack, architecture, and conventions.
 4. Start using commands!
@@ -59,12 +59,12 @@ your-project/
 
 ## Commands
 
-### `/keep:start [issue-number]`
+### `/keep-start [issue-number]`
 
 Start work on a GitHub issue with full context loading.
 
 ```bash
-/keep:start 1234
+/keep-start 1234
 ```
 
 **What it does:**
@@ -74,17 +74,24 @@ Start work on a GitHub issue with full context loading.
 - Creates `.claude/work/1234.md` tracking file
 - Suggests approach based on project patterns
 
+**Zero-issues workflow:**
+When no issue number is provided and no issues exist:
+1. **Discover** - Searches planning docs (ROADMAP.md, TODO.md) and code signals (TODO/FIXME comments, missing tests)
+2. **Synthesize** - Generates 3-5 actionable issue suggestions with source attribution
+3. **Create** - You select which issues to create, Keep generates and posts them to GitHub
+4. **Start** - You pick which issue to work on, Keep begins normal workflow
+
 **Flags:**
 - `--offline` - Skip GitHub, work locally only
 - `--no-fetch` - Resume existing work file
 
-### `/keep:save`
+### `/keep-save`
 
 Save progress and capture learnings.
 
 ```bash
-/keep:save
-/keep:save --sync  # Also post update to GitHub
+/keep-save
+/keep-save --sync  # Also post update to GitHub
 ```
 
 **What it does:**
@@ -98,37 +105,43 @@ Save progress and capture learnings.
 - `--sync` - Force sync to GitHub
 - `--local` - Skip GitHub sync confirmation
 
-### `/keep:done`
+### `/keep-done`
 
 Complete work and sync to GitHub.
 
 ```bash
-/keep:done
-/keep:done --close  # Also close the issue
+/keep-done
+/keep-done --close  # Also close the issue
 ```
 
 **What it does:**
 - Generates comprehensive summary of work completed
 - Suggests CLAUDE.md updates for accumulated learnings
-- Posts completion summary to GitHub issue
+- Detects associated PR on current branch
+- Posts completion summary to GitHub issue (includes PR link if exists)
+- Smart PR-aware issue closing:
+  - **PR merged**: Notes issue auto-closed via PR (GitHub auto-closes)
+  - **PR open**: Keeps issue open (will auto-close when PR merges)
+  - **PR closed (unmerged)**: Asks if you want to close manually
+  - **No PR**: Asks about closing issue
 - Archives work file to `.claude/archive/`
 - Updates session state
 - Recommends next work based on continuity + priority
 
 **Flags:**
-- `--close` - Close the GitHub issue
-- `--no-close` - Leave issue open
+- `--close` - Close the GitHub issue without asking
+- `--no-close` - Leave issue open without asking
 - `--no-sync` - Skip GitHub interaction
 - `--no-recommend` - Skip next work suggestions
 
-### `/keep:grow [directory]`
+### `/keep-grow [directory]`
 
 Create or update CLAUDE.md files for project context.
 
 ```bash
-/keep:grow .           # Analyze project root
-/keep:grow src/auth    # Analyze specific module
-/keep:grow --update    # Update existing CLAUDE.md
+/keep-grow .           # Analyze project root
+/keep-grow src/auth    # Analyze specific module
+/keep-grow --update    # Update existing CLAUDE.md
 ```
 
 **What it does:**
@@ -152,18 +165,18 @@ Create or update CLAUDE.md files for project context.
 
 ```bash
 # Start work on issue
-/keep:start 1234
+/keep-start 1234
 
 # Work on implementation...
 # (Keep observes decisions and learnings)
 
 # Save progress checkpoint
-/keep:save
+/keep-save
 
 # Continue working...
 
 # Complete and sync
-/keep:done --close
+/keep-done --close
 ```
 
 **Keep automatically:**
@@ -254,7 +267,7 @@ See `.claude/skills/keep/references/file-formats.md` for complete specifications
 
 Keep works without GitHub:
 ```bash
-/keep:start --offline
+/keep-start --offline
 # Provide issue details manually
 # Keep tracks locally, can sync later
 ```
@@ -279,16 +292,16 @@ gh issue list --json number,title,labels,body,updatedAt | \
 Manually trigger CLAUDE.md creation or updates:
 ```bash
 # Analyze and create root CLAUDE.md
-/keep:grow .
+/keep-grow .
 
 # Document a specific module
-/keep:grow src/auth
+/keep-grow src/auth
 
 # Update existing CLAUDE.md with new patterns
-/keep:grow src/api --update
+/keep-grow src/api --update
 ```
 
-Keep also suggests CLAUDE.md updates automatically during `/keep:save` when patterns emerge (3+ decisions in same area).
+Keep also suggests CLAUDE.md updates automatically during `/keep-save` when patterns emerge (3+ decisions in same area).
 
 ## Configuration
 
