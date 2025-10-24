@@ -8,7 +8,7 @@ This document contains detailed workflow examples showing how Keep operates in p
 
 ### User Invocation
 ```
-User: /keep:start 1234
+User: /keep-start 1234
 ```
 
 ### System Flow
@@ -118,7 +118,7 @@ User: /keep:start 1234
 
 ### User Invocation
 ```
-User: /keep:save
+User: /keep-save
 ```
 
 Or automatic trigger (if auto-save enabled):
@@ -245,7 +245,7 @@ Or automatic trigger (if auto-save enabled):
 
 ### User Invocation
 ```
-User: /keep:done
+User: /keep-done
 ```
 
 ### System Flow
@@ -415,10 +415,10 @@ Created #1250 to add monitoring dashboard for rate limit hits
 
 ### User Invocation
 ```
-User: /keep:next
+User: /keep-next
 ```
 
-Or automatically after `/keep:done`
+Or automatically after `/keep-done`
 
 ### System Flow
 
@@ -652,7 +652,7 @@ Does this look correct? [yes / no]
 ### Creating New CLAUDE.md
 
 **Triggered by:**
-- User runs `/keep:grow src/payments/`
+- User runs `/keep-grow src/payments/`
 - Keep detects threshold (2+ sessions in directory)
 - Keep notices missing context in active area
 
@@ -731,7 +731,7 @@ Does this look correct? [yes / no]
 
 ### User Invocation
 ```
-User: /keep:start
+User: /keep-start
 ```
 
 With no issue number and no open GitHub issues.
@@ -742,7 +742,7 @@ With no issue number and no open GitHub issues.
 ┌─────────────────────────────────────────────────────┐
 │ 1. Check CLAUDE.md Context                          │
 │    ├─ Look for root CLAUDE.md                       │
-│    ├─ If missing/stale: Offer /keep:grow first      │
+│    ├─ If missing/stale: Offer /keep-grow first      │
 │    └─ Ensure project context loaded                 │
 └──────────────┬──────────────────────────────────────┘
                │
@@ -785,7 +785,7 @@ With no issue number and no open GitHub issues.
 ┌─────────────────────────────────────────────────────┐
 │ 5. Start Work                                       │
 │    ├─ Ask: "Which issue to start?"                  │
-│    ├─ Transition to normal /keep:start workflow     │
+│    ├─ Transition to normal /keep-start workflow     │
 │    └─ Load context, create work file                │
 └─────────────────────────────────────────────────────┘
 ```
@@ -947,7 +947,7 @@ User: 1
 Would you like to:
 1. Create a ROADMAP.md to plan features
 2. Create an issue manually
-3. Use /keep:grow to document code first
+3. Use /keep-grow to document code first
 4. Work in local-only mode
 
 What would you prefer?

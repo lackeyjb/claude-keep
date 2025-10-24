@@ -57,24 +57,24 @@ The Keep skill should:
 
 **Initial setup on existing project:**
 ```
-/keep:grow .
+/keep-grow .
 ```
 Analyzes project root and suggests creating root CLAUDE.md with tech stack, architecture, conventions.
 
 **Document a module:**
 ```
-/keep:grow src/auth
+/keep-grow src/auth
 ```
 Analyzes `src/auth/` directory and suggests creating `src/auth/CLAUDE.md` with authentication patterns.
 
 **Update existing context:**
 ```
-/keep:grow src/api --update
+/keep-grow src/api --update
 ```
 Updates existing `src/api/CLAUDE.md` with new patterns discovered since it was created.
 
 **Catch up on missed suggestions:**
-If Keep suggested CLAUDE.md during `/keep:save` but you dismissed it, run `/keep:grow` to regenerate the suggestion.
+If Keep suggested CLAUDE.md during `/keep-save` but you dismissed it, run `/keep-grow` to regenerate the suggestion.
 
 ## Flags
 
@@ -146,8 +146,8 @@ Create src/payments/CLAUDE.md?
 
 ## Integration with Workflow
 
-`/keep:grow` complements the automatic suggestions:
-- **Automatic** (during `/keep:save`) - Keep suggests when threshold met
-- **Manual** (via `/keep:grow`) - You trigger when needed
+`/keep-grow` complements the automatic suggestions:
+- **Automatic** (during `/keep-save`) - Keep suggests when threshold met
+- **Manual** (via `/keep-grow`) - You trigger when needed
 
 Both use the same intelligence from the Keep skill.

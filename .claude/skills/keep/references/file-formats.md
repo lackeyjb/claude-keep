@@ -276,7 +276,7 @@ Handles user authentication, token management, and session security.
 ```
 
 **Management:**
-- Updated by Keep skill on `/keep:start`, `/keep:save`, `/keep:done`
+- Updated by Keep skill on `/keep-start`, `/keep-save`, `/keep-done`
 - Auto-saved every 15 minutes during active work (if auto-save enabled)
 - Human-readable markdown (Keep skill parses it)
 
@@ -338,6 +338,7 @@ None currently
 # Issue #{number}: {title}
 
 **GitHub:** {full URL to issue}
+**Pull Request:** {full URL to PR, if exists}
 **Status:** {in_progress|completed}
 **Started:** {ISO 8601 timestamp}
 **Last Updated:** {ISO 8601 timestamp}
@@ -396,7 +397,7 @@ None currently
 ```
 
 **Management:**
-- Created by `/keep:start` command
+- Created by `/keep-start` command
 - Updated by Keep skill during work (progress, decisions, learnings)
 - Moved to `.claude/archive/` when issue completed
 - Source for GitHub issue updates
@@ -406,6 +407,7 @@ None currently
 # Issue #1234: Add rate limiting to authentication
 
 **GitHub:** https://github.com/myuser/taskmaster-api/issues/1234
+**Pull Request:** https://github.com/myuser/taskmaster-api/pull/456
 **Status:** completed
 **Started:** 2024-10-23T10:00:00Z
 **Completed:** 2024-10-23T16:00:00Z

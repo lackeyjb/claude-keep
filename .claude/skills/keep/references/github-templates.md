@@ -6,7 +6,7 @@ This document contains templates for GitHub issue comments. Load when posting up
 
 ## Progress Update Format
 
-Use this format when posting progress updates during work (`/keep:save --sync`):
+Use this format when posting progress updates during work (`/keep-save --sync`):
 
 ```markdown
 ## Progress Update - {date} {time}
@@ -47,10 +47,12 @@ Next: Complete unit tests, then integration tests
 
 ## Completion Summary Format
 
-Use this format when completing work (`/keep:done`):
+Use this format when completing work (`/keep-done`):
 
 ```markdown
 ## ✅ Work Complete - {date} {time}
+
+{If PR exists: Completed via PR #{number}}
 
 ### Summary
 {1-2 paragraph summary of what was accomplished and why}
@@ -78,6 +80,8 @@ Use this format when completing work (`/keep:done`):
 
 ```markdown
 ## ✅ Work Complete - 2024-10-23 16:00
+
+Completed via PR #456
 
 ### Summary
 Implemented rate limiting for authentication endpoints using express-rate-limit with Redis store. The solution prevents brute force attacks by limiting login attempts to 5 per 15 minutes per IP address, while excluding health check endpoints from rate limiting to preserve monitoring capabilities.

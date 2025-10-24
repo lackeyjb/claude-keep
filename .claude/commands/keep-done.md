@@ -32,13 +32,21 @@ The Keep skill should:
   - Identify which CLAUDE.md files should be updated
   - Generate proposals
   - Get approval
+- **Detect associated PR:**
+  - Check for PR on current branch: `gh pr view --json state,number,url`
+  - If PR exists, store PR URL in work file
+  - Parse PR state (open, merged, closed)
 - Sync to GitHub:
-  - Post completion summary as issue comment
-  - Ask about closing issue
-  - If confirmed: close issue with `gh issue close {number}`
+  - Post completion summary as issue comment (include PR link if exists)
+  - **Smart issue closing (PR-aware):**
+    - If **PR merged**: Check if issue already closed. Don't ask - note "issue auto-closed via PR #X"
+    - If **PR open**: Don't close issue. Inform user it will auto-close when PR merges
+    - If **PR closed (unmerged)**: Ask if they want to close issue manually
+    - If **no PR**: Ask about closing issue (current behavior)
+  - If closing confirmed/needed: `gh issue close {number}`
 - Archive work file:
   - Move `.claude/work/{issue}.md` to `.claude/archive/`
-  - Preserve all content
+  - Preserve all content (including PR info)
 - Update state:
   - Clear active issue
   - Add to recent work
@@ -63,6 +71,11 @@ If no active work found:
 - If found but no work file, warn and offer to create from GitHub
 - If not found, inform user - nothing to complete
 
+If PR detection fails:
+- Continue with workflow (treat as no PR)
+- Note that PR detection unavailable
+- Fall back to asking about closing issue
+
 If GitHub sync fails:
 - Archive work file locally
 - Note that sync needed
@@ -73,7 +86,7 @@ If GitHub sync fails:
 If next work recommendations fail:
 - Continue with completion
 - Note that recommendations unavailable
-- User can run `/keep:next` manually
+- User can run `/keep-next` manually
 
 ## GitHub Summary Format
 
@@ -81,6 +94,8 @@ The completion comment posted to GitHub should follow this format:
 
 ```markdown
 ## ✅ Work Complete - {date} {time}
+
+{If PR exists: Completed via PR #{number}}
 
 ### Summary
 {1-2 paragraph summary of what was accomplished and why}
@@ -107,25 +122,25 @@ The completion comment posted to GitHub should follow this format:
 ## Example Usage
 
 ```
-/keep:done
+/keep-done
 ```
 
 Completes work, posts summary to GitHub, asks about closing, recommends next.
 
 ```
-/keep:done --close
+/keep-done --close
 ```
 
 Completes work, posts summary, closes issue, recommends next.
 
 ```
-/keep:done --no-sync
+/keep-done --no-sync
 ```
 
 Completes work locally only, no GitHub interaction.
 
 ```
-/keep:done --no-recommend
+/keep-done --no-recommend
 ```
 
 Completes work and syncs but skips next work recommendations.

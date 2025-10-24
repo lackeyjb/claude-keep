@@ -28,7 +28,7 @@ See `references/file-formats.md` for all file format specifications.
 
 Keep is invoked via slash commands in `.claude/commands/`:
 
-### /keep:start [issue-number]
+### /keep-start [issue-number]
 
 Begin work on a GitHub issue (or discover work if no issues exist).
 
@@ -46,7 +46,7 @@ Begin work on a GitHub issue (or discover work if no issues exist).
 **Zero-issues project initialization:**
 
 When no issues exist, discover starter work using native tools:
-1. Check CLAUDE.md context (offer `/keep:grow .` if missing)
+1. Check CLAUDE.md context (offer `/keep-grow .` if missing)
 2. Scan planning docs (Glob: `{ROADMAP,TODO,PLAN}*.md`), code signals (Grep: `TODO:|FIXME:|BUG:`), test gaps
 3. Generate 3-5 issue suggestions with source attribution
 4. User selects issues to create
@@ -57,7 +57,7 @@ See `references/zero-issues.md` for detailed discovery patterns and logic.
 
 ---
 
-### /keep:save [--sync]
+### /keep-save [--sync]
 
 Save progress and capture learnings during work session.
 
@@ -84,21 +84,27 @@ Save progress and capture learnings during work session.
 
 ---
 
-### /keep:done [--close]
+### /keep-done [--close]
 
 Complete work, sync to GitHub, archive, and recommend next work.
 
 **Workflow:**
 1. **Generate summary** - Read complete work file, aggregate all progress/decisions/learnings
 2. **Check context updates** - Review all learnings, propose CLAUDE.md updates if patterns emerged
-3. **Sync to GitHub:**
+3. **Detect PR** - Check for associated PR via `gh pr view --json state,number,url`
+4. **Sync to GitHub:**
    - Generate completion summary (see `references/github-templates.md`)
+   - Include PR link in summary if PR exists
    - Post via `gh issue comment {number}`
-   - Ask about closing issue
-   - If confirmed: `gh issue close {number}`
-4. **Archive work file** - Move `.claude/work/{issue}.md` → `.claude/archive/{issue}.md`
-5. **Update state** - Clear active issue, add to recent work, update hot areas
-6. **Recommend next work:**
+   - **PR-aware closing:**
+     - **PR merged**: Check if issue already closed (GitHub auto-closes when PR with "Fixes #X" merges). Don't ask - note "issue auto-closed via PR #X"
+     - **PR open**: Don't close issue. Inform user it will auto-close when PR merges
+     - **PR closed (unmerged)**: Ask if they want to close issue manually
+     - **No PR**: Ask about closing issue (current behavior)
+   - If closing confirmed/needed: `gh issue close {number}`
+5. **Archive work file** - Move `.claude/work/{issue}.md` → `.claude/archive/{issue}.md` (preserve PR info)
+6. **Update state** - Clear active issue, add to recent work, update hot areas
+7. **Recommend next work:**
    - Fetch open issues via `gh issue list`
    - Score using `scripts/score_issues.py` (continuity 30%, priority 30%, freshness 20%, dependency 20%)
    - Present top 3-5 recommendations
@@ -157,13 +163,31 @@ Parse issue body for:
 - Related issues
 - Technical constraints
 
+### Pull Request Detection
+
+Check for associated PR on current branch:
+```bash
+gh pr view --json state,number,url
+```
+
+**PR-aware workflow:**
+- Track PR URL in work file when detected
+- Include PR link in GitHub completion summaries
+- Smart issue closing based on PR state:
+  - **Merged PR**: Issue should be auto-closed, verify and note
+  - **Open PR**: Don't close issue (will auto-close on merge if properly linked)
+  - **Closed PR (unmerged)**: Ask user about closing issue
+  - **No PR**: Standard close confirmation
+
+**GitHub auto-close:** Issues automatically close when PRs that reference them (e.g., "Fixes #123", "Closes #123") are merged. Keep respects this behavior.
+
 ### Posting Updates
 
 Generate concise, valuable summaries. Focus on outcomes, not process.
 
 Use formats from `references/github-templates.md`:
 - **Progress update** - Completed items, in-progress, key decisions, next steps
-- **Completion summary** - Summary, changes made, key decisions, testing, learnings, follow-up
+- **Completion summary** - Summary, changes made, key decisions, testing, learnings, follow-up, PR link
 
 Post via:
 ```bash
@@ -175,6 +199,7 @@ gh issue comment {number} --body "{summary}"
 - If `gh` not available → Warn user, continue in local-only mode
 - If network fails → Save locally, note sync needed
 - If rate limit hit → Wait or continue with local data
+- If PR detection fails → Continue with standard workflow
 - Never fail workflow due to GitHub issues
 
 See `references/troubleshooting.md` for detailed error handling.
@@ -194,9 +219,9 @@ Current session state - what you're working on right now.
 - **Context** - Hot directories, current focus areas
 
 **Update on:**
-- `/keep:start` - Set active issue, start time
-- `/keep:save` - Update progress, next steps
-- `/keep:done` - Clear active, add to recent, update context
+- `/keep-start` - Set active issue, start time
+- `/keep-save` - Update progress, next steps
+- `/keep-done` - Clear active, add to recent, update context
 
 ### .claude/work/{issue-number}.md
 
@@ -215,9 +240,9 @@ Detailed tracking for specific issue during active work.
 - Related issues
 
 **Lifecycle:**
-- Created on `/keep:start`
+- Created on `/keep-start`
 - Updated during work (progress, decisions, learnings)
-- Moved to `.claude/archive/` on `/keep:done`
+- Moved to `.claude/archive/` on `/keep-done`
 
 See `references/file-formats.md` for complete specifications.
 
@@ -243,7 +268,7 @@ Load as needed to inform work:
 
 Execute without loading into context:
 
-**`scripts/score_issues.py`** - Implements issue scoring algorithm for next work recommendations. Execute via Bash for `/keep:done` recommendations.
+**`scripts/score_issues.py`** - Implements issue scoring algorithm for next work recommendations. Execute via Bash for `/keep-done` recommendations.
 
 **`scripts/github_sync.py`** - Helper for GitHub API operations with authentication, rate limiting, retries. Use when `gh` CLI insufficient.
 

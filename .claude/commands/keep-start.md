@@ -74,13 +74,13 @@ If issue not found:
 ## Example Usage
 
 ```
-/keep:start 1234
+/keep-start 1234
 ```
 
 Starts work on issue #1234 with full context loading.
 
 ```
-/keep:start
+/keep-start
 ```
 
 Prompts for issue number or offers to recommend next work.

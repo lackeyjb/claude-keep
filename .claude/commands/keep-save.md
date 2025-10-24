@@ -54,7 +54,7 @@ The Keep skill should:
 If no active work found:
 - Check `.claude/state.md` for active issue
 - If found, recreate work file from GitHub issue
-- If not found, inform user and suggest `/keep:start`
+- If not found, inform user and suggest `/keep-start`
 
 If GitHub sync fails:
 - Save progress locally
@@ -79,19 +79,19 @@ When suggesting CLAUDE.md updates:
 ## Example Usage
 
 ```
-/keep:save
+/keep-save
 ```
 
 Saves progress locally, suggests context updates if threshold met.
 
 ```
-/keep:save --sync
+/keep-save --sync
 ```
 
 Saves progress and posts update to GitHub issue.
 
 ```
-/keep:save --local
+/keep-save --local
 ```
 
 Saves progress locally without GitHub sync prompt.

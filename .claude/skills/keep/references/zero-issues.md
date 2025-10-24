@@ -7,7 +7,7 @@ Detailed patterns and implementation guide for discovering starter work when a p
 ## When to Trigger
 
 Zero-issues initialization starts when:
-- `/keep:start` called without issue number
+- `/keep-start` called without issue number
 - `gh issue list` returns empty array
 - User asks "what should I work on?" with no open issues
 
@@ -26,7 +26,7 @@ Use Claude Code's native tools to find actionable work:
 ```
 
 **Decision logic:**
-- If root CLAUDE.md missing: Offer `/keep:grow .` first
+- If root CLAUDE.md missing: Offer `/keep-grow .` first
 - If root CLAUDE.md stale (>3 months): Suggest updating
 - If present and current: Continue to discovery
 
@@ -270,7 +270,7 @@ Which issue would you like to start working on?
 ```
 
 **If user selects issue:**
-- Transition to normal `/keep:start {number}` workflow
+- Transition to normal `/keep-start {number}` workflow
 - Load context
 - Create work file
 - Begin work
@@ -308,7 +308,7 @@ Which issue would you like to start working on?
 Would you like to:
 1. Create a ROADMAP.md to plan features
 2. Create an issue manually
-3. Use /keep:grow to document code first
+3. Use /keep-grow to document code first
 4. Work in local-only mode
 
 What would you prefer?
@@ -337,7 +337,7 @@ Continue analyzing? [yes / no]
 
 Before suggesting work, I recommend creating project context:
 
-Run /keep:grow . to create CLAUDE.md
+Run /keep-grow . to create CLAUDE.md
 
 This will help me:
 - Understand your tech stack

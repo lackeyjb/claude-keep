@@ -221,7 +221,7 @@ State says: #1234 active
 Found: .claude/archive/1234.md (archived)
 
 Possible causes:
-• /keep:done ran but state update failed
+• /keep-done ran but state update failed
 • Manual file operations
 
 Fix by:
@@ -350,7 +350,7 @@ Please resolve the conflict manually:
   1. Edit .claude/state.md
   2. Remove conflict markers
   3. Keep correct active issue
-  4. Run /keep:save to validate
+  4. Run /keep-save to validate
 
 [done - retry / abort]
 ```
@@ -407,7 +407,7 @@ If state is irrecoverably broken:
 Recommended: Start fresh
 1. Backup: cp .claude/state.md .claude/state.md.broken
 2. Delete: rm .claude/state.md
-3. Restart: /keep:start {issue-number}
+3. Restart: /keep-start {issue-number}
 
 Proceed? [yes / manual recovery]
 ```
@@ -438,8 +438,8 @@ This happens when:
 • Work was completed but state not updated
 
 To fix:
-• Start new work: /keep:start {issue-number}
-• Resume existing: /keep:start {issue-number}
+• Start new work: /keep-start {issue-number}
+• Resume existing: /keep-start {issue-number}
 
 What would you like to do?
 ```
@@ -459,7 +459,7 @@ I couldn't find a work file for the current issue.
 
 This usually means work hasn't been started yet.
 
-Start work with: /keep:start {issue-number}
+Start work with: /keep-start {issue-number}
 ```
 
 ---
