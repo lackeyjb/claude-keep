@@ -342,4 +342,7 @@ This is a personal project but suggestions welcome! The skill is designed to be 
 - Skill documentation: `.claude/skills/keep/SKILL.md`
 - File format specs: `.claude/skills/keep/references/file-formats.md`
 - Workflow examples: `.claude/skills/keep/references/workflows.md`
+- GitHub templates: `.claude/skills/keep/references/github-templates.md`
+- Troubleshooting: `.claude/skills/keep/references/troubleshooting.md`
+- Zero-issues workflow: `.claude/skills/keep/references/zero-issues.md`
 - GitHub scripts: `.claude/skills/keep/scripts/`
