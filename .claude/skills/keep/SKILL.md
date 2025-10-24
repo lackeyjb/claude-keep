@@ -397,6 +397,11 @@ I notice you don't have any open issues. Let me help find starter work!
 Which issues should I create? [all / 1,2,3 / none - work locally]
 ```
 
+Before creating issues:
+- Collect all unique labels from selected issues
+- Check existing labels: `gh label list --json name --jq '.[].name'`
+- For any missing labels, create with default color: `gh label create "label-name"`
+
 For each selected issue:
 - Generate natural issue body (describe what, why, where, source)
 - Create via `gh issue create --title "..." --body "..." --label "..."`
