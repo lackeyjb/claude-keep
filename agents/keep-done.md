@@ -75,7 +75,7 @@ Review all learnings and decisions:
 - Keep concise (<200 lines)
 - Confirm updates
 
-See `.claude/skills/keep/references/file-formats.md` for CLAUDE.md format.
+See `skills/keep/references/file-formats.md` for CLAUDE.md format.
 
 ### 5. Detect Associated Pull Request
 
@@ -100,7 +100,7 @@ If PR exists, update work file with PR URL before archiving.
 
 ### 6. Sync to GitHub
 
-**Generate completion summary** using template from `.claude/skills/keep/references/templates/github-completion.md` (load when needed):
+**Generate completion summary** using template from `skills/keep/references/templates/github-completion.md` (load when needed):
 
 ```markdown
 ## ✅ Work Complete - {date} {time}
@@ -212,11 +212,11 @@ Keep last 3 issues.
 gh issue list --state open --json number,title,labels,body,updatedAt --limit 50
 ```
 
-**Score each issue** using `.claude/skills/keep/scripts/score_issues.py`:
+**Score each issue** using `skills/keep/scripts/score_issues.py`:
 
 Execute script via Bash (don't load into context):
 ```bash
-python .claude/skills/keep/scripts/score_issues.py \
+python skills/keep/scripts/score_issues.py \
   --issues "{json}" \
   --recent-work ".claude/state.md" \
   --context ".claude/state.md"
@@ -289,7 +289,7 @@ Start #{top-recommendation}?
 - Never delete work file
 - Warn user about manual cleanup
 
-See `.claude/skills/keep/references/troubleshooting.md` for detailed error handling.
+See `skills/keep/references/troubleshooting.md` for detailed error handling.
 
 ## Best Practices
 

@@ -30,7 +30,7 @@ Start work on a GitHub issue by loading context, creating work tracking files, a
 5. Ensure labels exist, create via `gh issue create`
 6. User picks issue to start
 
-See `.claude/skills/keep/references/zero-issues.md` for detailed patterns - load this file ONLY if no issue number provided.
+See `skills/keep/references/zero-issues.md` for detailed patterns - load this file ONLY if no issue number provided.
 
 ### 2. Fetch Issue from GitHub
 
@@ -72,7 +72,7 @@ Be conversational, not prescriptive. Help user think through approach.
 
 ### 5. Create Work File
 
-Create `.claude/work/{issue-number}.md` using format from `.claude/skills/keep/references/file-formats.md` (load if needed for format details).
+Create `.claude/work/{issue-number}.md` using format from `skills/keep/references/file-formats.md` (load if needed for format details).
 
 **Key sections:**
 - Issue metadata (GitHub URL, status, timestamps)
@@ -90,7 +90,7 @@ Update or create `.claude/state.md`:
 - Clear previous active work (move to Recent Work)
 - Note branch if known
 
-See `.claude/skills/keep/references/file-formats.md` for state.md format.
+See `skills/keep/references/file-formats.md` for state.md format.
 
 ### 7. Present Starting Point
 
@@ -120,7 +120,7 @@ Provide conversational summary with:
 - Show reconstructed state for confirmation
 - Never silently delete - backup to `.claude/state.md.backup`
 
-See `.claude/skills/keep/references/troubleshooting.md` for detailed error handling - load only when encountering errors.
+See `skills/keep/references/troubleshooting.md` for detailed error handling - load only when encountering errors.
 
 ## Directory Structure
 

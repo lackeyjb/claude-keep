@@ -107,7 +107,7 @@ cat {directory}/CLAUDE.md
 
 ### 5. Generate Proposal
 
-Draft CLAUDE.md following format from `.claude/skills/keep/references/file-formats.md` (load for format details):
+Draft CLAUDE.md following format from `skills/keep/references/file-formats.md` (load for format details):
 
 **For root CLAUDE.md (project root):**
 ```markdown

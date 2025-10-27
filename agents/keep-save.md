@@ -144,7 +144,7 @@ Add this to {path}/CLAUDE.md?
 - Note decision in work file
 - Continue without update
 
-See `.claude/skills/keep/references/file-formats.md` for CLAUDE.md format guidelines.
+See `skills/keep/references/file-formats.md` for CLAUDE.md format guidelines.
 
 ### 7. Optional GitHub Sync
 
@@ -155,7 +155,7 @@ See `.claude/skills/keep/references/file-formats.md` for CLAUDE.md format guidel
 
 **If syncing to GitHub:**
 
-1. Generate progress summary using template from `.claude/skills/keep/references/templates/github-progress.md` (load template when needed):
+1. Generate progress summary using template from `skills/keep/references/templates/github-progress.md` (load template when needed):
 
 ```markdown
 ## Progress Update - {date} {time}
@@ -217,7 +217,7 @@ Present summary of what was saved:
 - Rate limit → Note time until reset, continue
 - Never fail workflow due to GitHub issues
 
-See `.claude/skills/keep/references/troubleshooting.md` for detailed error handling.
+See `skills/keep/references/troubleshooting.md` for detailed error handling.
 
 ## Best Practices
 

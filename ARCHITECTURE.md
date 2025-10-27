@@ -297,7 +297,7 @@ Load `troubleshooting.md` ONLY when encountering errors
 Python scripts executed via Bash without loading into context:
 
 ```bash
-python .claude/skills/keep/scripts/score_issues.py --issues "{json}"
+python skills/keep/scripts/score_issues.py --issues "{json}"
 ```
 
 The algorithm runs, returns results, but code never enters context.

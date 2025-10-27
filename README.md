@@ -25,8 +25,33 @@ Keep is a skill + commands system for Claude Code that provides:
 
 ### Installation
 
-1. Copy `.claude/` directory to your project root
-2. Ensure you have `gh` CLI installed (optional, for GitHub integration)
+#### Option 1: Install from GitHub (Recommended)
+
+```bash
+# Add the Keep marketplace
+/plugin marketplace add https://github.com/lackeyjb/claude-keep
+
+# Install the plugin
+/plugin install keep@keep-marketplace
+```
+
+#### Option 2: Install Locally
+
+```bash
+# Clone the repository
+git clone https://github.com/lackeyjb/claude-keep.git
+
+# Add as local marketplace
+/plugin marketplace add ./claude-keep
+
+# Install the plugin
+/plugin install keep@keep-marketplace
+```
+
+#### Getting Started
+
+1. Ensure you have `gh` CLI installed (optional, for GitHub integration)
+2. Keep will automatically create `.claude/` directory structure in your projects when you first use a command
 3. Create initial project context:
    ```bash
    /keep-grow .
@@ -36,6 +61,7 @@ Keep is a skill + commands system for Claude Code that provides:
 
 ### Directory Structure
 
+**In your project** (auto-created by Keep):
 ```
 your-project/
 ├── CLAUDE.md                    # Root context (create manually or let Keep suggest)
@@ -43,18 +69,31 @@ your-project/
 │   └── auth/
 │       └── CLAUDE.md            # Module context (Keep suggests when patterns emerge)
 └── .claude/
-    ├── work/                    # Active issue tracking
-    ├── archive/                 # Completed issues
-    ├── state.md                 # Current session state
-    ├── commands/
-    │   ├── keep-start.md        # Start work command
-    │   ├── keep-save.md         # Save progress command
-    │   ├── keep-done.md         # Complete work command
-    │   └── keep-grow.md         # Grow context command
-    └── skills/keep/
-        ├── SKILL.md             # Keep skill intelligence
-        ├── references/          # File format specs, workflows
-        └── scripts/             # GitHub helpers, scoring algorithm
+    ├── work/                    # Active issue tracking (auto-created)
+    ├── archive/                 # Completed issues (auto-created)
+    └── state.md                 # Current session state (auto-created)
+```
+
+**Plugin structure** (installed via `/plugin install`):
+```
+keep/
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin metadata
+│   └── marketplace.json         # Marketplace configuration
+├── commands/
+│   ├── keep-start.md            # Start work command
+│   ├── keep-save.md             # Save progress command
+│   ├── keep-done.md             # Complete work command
+│   └── keep-grow.md             # Grow context command
+├── agents/
+│   ├── keep-start.md            # Start workflow agent
+│   ├── keep-save.md             # Save workflow agent
+│   ├── keep-done.md             # Done workflow agent
+│   └── keep-grow.md             # Grow workflow agent
+└── skills/keep/
+    ├── SKILL.md                 # Keep skill intelligence
+    ├── references/              # File format specs, workflows
+    └── scripts/                 # GitHub helpers, scoring algorithm
 ```
 
 ## Commands
@@ -276,7 +315,7 @@ Domain-specific context (auto-loaded when working in directory):
 - Common mistakes
 - Dependencies and testing
 
-See `.claude/skills/keep/references/file-formats.md` for complete specifications.
+See `skills/keep/references/file-formats.md` for complete specifications.
 
 ## Advanced Usage
 
@@ -295,13 +334,13 @@ Keep includes helper scripts:
 
 **`github_sync.py`** - GitHub API operations with retry logic:
 ```bash
-python .claude/skills/keep/scripts/github_sync.py fetch-issue 1234
+python skills/keep/scripts/github_sync.py fetch-issue 1234
 ```
 
 **`score_issues.py`** - Score open issues for recommendations:
 ```bash
 gh issue list --json number,title,labels,body,updatedAt | \
-  python .claude/skills/keep/scripts/score_issues.py --recent-work .claude/state.md
+  python skills/keep/scripts/score_issues.py --recent-work .claude/state.md
 ```
 
 ### Context Growth
@@ -322,7 +361,7 @@ Keep also suggests CLAUDE.md updates automatically during `/keep-save` when patt
 
 ## Configuration
 
-Keep is designed to work with minimal configuration. All intelligence lives in `.claude/skills/keep/SKILL.md`.
+Keep is designed to work with minimal configuration. All intelligence lives in `skills/keep/SKILL.md`.
 
 To customize behavior, edit the skill file to adjust:
 - Learning thresholds (default: 3 decisions)
@@ -365,15 +404,15 @@ MIT
 
 ## Contributing
 
-This is a personal project but suggestions welcome! The skill is designed to be customized - edit `.claude/skills/keep/SKILL.md` to suit your workflow.
+This is a personal project but suggestions welcome! The skill is designed to be customized - edit `skills/keep/SKILL.md` to suit your workflow.
 
 ## Learn More
 
 - **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - Context optimization and sub-agent design
-- **Skill documentation:** `.claude/skills/keep/SKILL.md` - Core philosophy and principles
-- **File format specs:** `.claude/skills/keep/references/file-formats.md`
-- **Workflow examples:** `.claude/skills/keep/references/workflows.md`
-- **GitHub templates:** `.claude/skills/keep/references/github-templates.md`
-- **Troubleshooting:** `.claude/skills/keep/references/troubleshooting.md`
-- **Zero-issues workflow:** `.claude/skills/keep/references/zero-issues.md`
-- **GitHub scripts:** `.claude/skills/keep/scripts/`
+- **Skill documentation:** `skills/keep/SKILL.md` - Core philosophy and principles
+- **File format specs:** `skills/keep/references/file-formats.md`
+- **Workflow examples:** `skills/keep/references/workflows.md`
+- **GitHub templates:** `skills/keep/references/github-templates.md`
+- **Troubleshooting:** `skills/keep/references/troubleshooting.md`
+- **Zero-issues workflow:** `skills/keep/references/zero-issues.md`
+- **GitHub scripts:** `skills/keep/scripts/`

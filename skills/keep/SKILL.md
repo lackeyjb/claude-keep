@@ -34,26 +34,26 @@ Keep provides intelligent project memory through structured issue tracking, auto
 
 Keep delegates to specialized sub-agents for each workflow:
 
-**`/keep-start [issue]`** → `.claude/agents/keep-start.md`
+**`/keep-start [issue]`** → `agents/keep-start.md`
 - Fetch issue from GitHub
 - Load project context
 - Create work tracking file
 - Present informed starting point
 - Handle zero-issues project initialization
 
-**`/keep-save [--sync]`** → `.claude/agents/keep-save.md`
+**`/keep-save [--sync]`** → `agents/keep-save.md`
 - Capture progress and learnings
 - Update work file and state
 - Suggest CLAUDE.md updates when patterns emerge
 - Optional sync to GitHub
 
-**`/keep-done [--close]`** → `.claude/agents/keep-done.md`
+**`/keep-done [--close]`** → `agents/keep-done.md`
 - Generate comprehensive summary
 - Detect and handle PR state
 - Sync to GitHub with smart closing
 - Archive work and recommend next issue
 
-**`/keep-grow [directory]`** → `.claude/agents/keep-grow.md`
+**`/keep-grow [directory]`** → `agents/keep-grow.md`
 - Analyze directory for patterns
 - Create or update CLAUDE.md
 - Grow project context deliberately
@@ -62,36 +62,47 @@ Each sub-agent operates in its own context with only the tools and knowledge it 
 
 ## File Organization
 
+**Plugin structure** (installed via `/plugin install keep`):
 ```
-.claude/
-├── agents/               # Workflow sub-agents (invoked by commands)
+keep/
+├── .claude-plugin/
+│   ├── plugin.json          # Plugin metadata
+│   └── marketplace.json     # Marketplace configuration
+├── agents/                  # Workflow sub-agents (invoked by commands)
 │   ├── keep-start.md
 │   ├── keep-save.md
 │   ├── keep-done.md
 │   └── keep-grow.md
-├── commands/            # Slash commands (thin wrappers)
+├── commands/                # Slash commands (thin wrappers)
 │   ├── keep-start.md
 │   ├── keep-save.md
 │   ├── keep-done.md
 │   └── keep-grow.md
-├── skills/keep/
-│   ├── SKILL.md         # This file - minimal core philosophy
-│   ├── references/      # Load as needed
-│   │   ├── file-formats.md        # File format specs
-│   │   ├── zero-issues.md         # Discovery patterns
-│   │   ├── troubleshooting.md     # Error handling
-│   │   ├── workflows.md           # Detailed examples
-│   │   └── templates/
-│   │       ├── github-progress.md
-│   │       └── github-completion.md
-│   └── scripts/         # Execute without loading
-│       ├── score_issues.py
-│       └── github_sync.py
-├── state.md            # Current session state
-├── work/               # Active work tracking
-│   └── {issue}.md
-└── archive/            # Completed work
-    └── {issue}.md
+└── skills/keep/
+    ├── SKILL.md             # This file - minimal core philosophy
+    ├── references/          # Load as needed
+    │   ├── file-formats.md        # File format specs
+    │   ├── zero-issues.md         # Discovery patterns
+    │   ├── troubleshooting.md     # Error handling
+    │   ├── workflows.md           # Detailed examples
+    │   └── templates/
+    │       ├── github-progress.md
+    │       └── github-completion.md
+    └── scripts/             # Execute without loading
+        ├── score_issues.py
+        └── github_sync.py
+```
+
+**User project structure** (auto-created in user's projects):
+```
+your-project/
+├── CLAUDE.md            # Root context (suggested by Keep)
+└── .claude/
+    ├── state.md         # Current session state (auto-created)
+    ├── work/            # Active work tracking (auto-created)
+    │   └── {issue}.md
+    └── archive/         # Completed work (auto-created)
+        └── {issue}.md
 ```
 
 ## State Management

@@ -1,0 +1,14 @@
+{
+  "name": "keep-marketplace",
+  "owner": {
+    "name": "Bryan Lackey",
+    "url": "https://github.com/lackeyjb"
+  },
+  "plugins": [
+    {
+      "name": "keep",
+      "source": ".",
+      "description": "Intelligent project memory and workflow management for Claude Code. Track GitHub issues, capture learnings, and grow project context through CLAUDE.md files."
+    }
+  ]
+}

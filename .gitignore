@@ -1,8 +1,8 @@
-# Keep-specific files (user data)
-.claude/settings.local.json
+# Keep-specific files (local testing - if testing plugin in this directory)
 .claude/work/
 .claude/archive/
 .claude/state.md
+.claude/settings*.json
 
 # Python
 __pycache__/
