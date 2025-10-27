@@ -11,10 +11,11 @@ Start work on a GitHub issue by loading context, creating work tracking files, a
 
 ## Core Workflow
 
-### 1. Determine Issue Number
+### 1. Determine Issue Number and Check for Resume
 
 **If issue number provided:**
-- Proceed to fetch issue from GitHub
+- First check for existing work file (resume detection)
+- Then proceed based on resume status
 
 **If no issue number (Zero-Issues Workflow):**
 1. Check if CLAUDE.md exists and is current
@@ -31,6 +32,99 @@ Start work on a GitHub issue by loading context, creating work tracking files, a
 6. User picks issue to start
 
 See `skills/keep/references/zero-issues.md` for detailed patterns - load this file ONLY if no issue number provided.
+
+### 1a. Resume Detection (When Issue Number Provided)
+
+Before fetching from GitHub, check if this is resuming existing work:
+
+**Check for existing work file:**
+```bash
+test -f .claude/work/{issue-number}.md && echo "EXISTS" || echo "NEW"
+```
+
+**If work file EXISTS (resume scenario):**
+
+1. **Read work file metadata:**
+   - Check "Last Updated" timestamp from Progress Log section
+   - Read current progress, decisions, and next steps
+   - Extract issue title and description from work file
+
+2. **Read state.md to confirm active status:**
+   ```bash
+   grep "Current Issue: #{issue-number}" .claude/state.md
+   ```
+
+3. **Calculate freshness:**
+   - Parse last "Progress Log" timestamp
+   - Calculate hours since last update
+   - Categorize: Recent (< 24h), Moderate (24-48h), Stale (> 48h)
+
+4. **Resume strategy by freshness:**
+
+   **Recent (< 24 hours) - Auto Resume:**
+   - Skip GitHub API call (use cached data from work file)
+   - Present resume summary immediately
+   - Load context (CLAUDE.md files)
+   - Show progress, decisions, and next steps from work file
+
+   **Moderate (24-48 hours) - Confirm First:**
+   - Present work file data briefly
+   - Ask: "This was last updated {time-ago}. Resume with cached data, or refetch from GitHub for latest status?"
+   - If resume: Use cached data, skip GitHub
+   - If refetch: Proceed to GitHub fetch (normal workflow)
+
+   **Stale (> 48 hours) OR not in state.md - Refetch:**
+   - Note: "Resuming work from {time-ago}"
+   - Fetch fresh data from GitHub (proceed to step 2)
+   - Update work file with any new information from GitHub
+   - Present as "refreshed resume"
+
+5. **Resume presentation format:**
+   ```markdown
+   ✅ Resuming work on issue #{number}
+
+   📋 Issue: {title}
+   ⏱️  Last updated: {time-ago} ({human-readable timestamp})
+
+   📝 Where you left off:
+   - {most recent progress entry}
+   - {key accomplishment}
+   - {current status}
+
+   💡 Decisions captured:
+   - {decision 1}
+   - {decision 2}
+
+   📂 Context loaded:
+   ├─ CLAUDE.md (project overview)
+   └─ {module}/CLAUDE.md (if relevant)
+
+   🎯 Next steps (from last session):
+   1. {next action 1}
+   2. {next action 2}
+   3. {next action 3}
+
+   ❓ Open questions:
+   - {question 1}
+   - {question 2}
+
+   Ready to continue?
+   ```
+
+**If work file DOES NOT EXIST (new work):**
+- Proceed to step 2 (Fetch Issue from GitHub)
+- This is a fresh start on this issue
+
+**Performance benefits of resume:**
+- Avoids GitHub API call (faster, preserves rate limits)
+- Instant context loading from cached work file
+- User sees their exact progress, not just issue description
+- No network dependency for recent work
+
+**Validation of cached data:**
+- Work file must have valid timestamp format
+- Work file must contain issue number matching requested
+- If work file corrupted: warn user, offer to fetch fresh from GitHub
 
 ### 2. Fetch Issue from GitHub
 

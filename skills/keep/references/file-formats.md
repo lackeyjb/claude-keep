@@ -276,9 +276,19 @@ Handles user authentication, token management, and session security.
 ```
 
 **Management:**
-- Updated by Keep skill on `/keep-start`, `/keep-save`, `/keep-done`
+- Updated by Keep skill on `/keep:start`, `/keep:save`, `/keep:done`
+- **Read by Keep skill at session start** for intelligent resume detection
 - Auto-saved every 15 minutes during active work (if auto-save enabled)
 - Human-readable markdown (Keep skill parses it)
+
+**Resume Detection:**
+- Checked proactively at conversation start (session boundary detection)
+- **Active Work** section with recent timestamp (< 48h) = resumable work
+- Issue number from "Current Issue" field used for `/keep:start {issue}` suggestion
+- Time since "Last Updated" determines suggestion strategy:
+  - < 48 hours: Proactively suggest resume
+  - ≥ 48 hours: Mention stale work, ask if user wants to resume
+- Missing "Active Work" section = no resume suggestion
 
 **Example:**
 ```markdown

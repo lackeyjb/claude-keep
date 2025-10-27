@@ -121,18 +121,32 @@ keep/
 
 ### `/keep:start [issue-number]`
 
-Start work on a GitHub issue with full context loading.
+Start work on a GitHub issue with full context loading. **Automatically detects and resumes interrupted work.**
 
 ```bash
 /keep:start 1234
 ```
 
 **What it does:**
-- Fetches issue from GitHub
+- **Intelligent resume:** Detects if you're resuming previous work on this issue
+  - Recent work (< 24h): Instantly resumes with cached data, skips GitHub fetch
+  - Moderate (24-48h): Asks whether to resume cached or refetch fresh data
+  - Stale (> 48h): Refetches from GitHub to ensure latest status
+- Fetches issue from GitHub (when starting fresh or data is stale)
 - Loads relevant CLAUDE.md files for context
 - Reads recent work from `.claude/state.md` and archive
-- Creates `.claude/work/1234.md` tracking file
+- Creates/updates `.claude/work/1234.md` tracking file
 - Suggests approach based on project patterns
+
+**Proactive resume detection:**
+Keep watches for session boundaries. When you start a new conversation and have active work from a recent session (< 48h), Claude will proactively suggest resuming:
+
+```
+You: [starts new session]
+Claude: "I see you were working on issue #1234 (Add rate limiting) - last updated
+        6 hours ago. You had made good progress: middleware 80% complete, 3 decisions
+        captured. Want to pick up where you left off?"
+```
 
 **Zero-issues workflow:**
 When no issue number is provided and no issues exist:
@@ -143,7 +157,6 @@ When no issue number is provided and no issues exist:
 
 **Flags:**
 - `--offline` - Skip GitHub, work locally only
-- `--no-fetch` - Resume existing work file
 
 ### `/keep:save`
 
