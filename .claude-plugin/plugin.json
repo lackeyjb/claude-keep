@@ -1,7 +1,7 @@
 {
   "name": "keep",
   "description": "Project memory and workflow management for software development. Use when user mentions starting work, completing tasks, making technical decisions, capturing learnings, documenting patterns, needing context about code, or asking what to work on next. Proactively suggest tracking work, capturing insights, and growing project context. Integrates with GitHub issues when available.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Bryan Lackey",
     "url": "https://github.com/lackeyjb/claude-keep"
