@@ -355,13 +355,13 @@ Keep includes helper scripts:
 
 **`github_sync.py`** - GitHub API operations with retry logic:
 ```bash
-python skills/keep/scripts/github_sync.py fetch-issue 1234
+python ${CLAUDE_PLUGIN_ROOT}/skills/keep/scripts/github_sync.py fetch-issue 1234
 ```
 
 **`score_issues.py`** - Score open issues for recommendations:
 ```bash
 gh issue list --json number,title,labels,body,updatedAt | \
-  python skills/keep/scripts/score_issues.py --recent-work .claude/state.md
+  python ${CLAUDE_PLUGIN_ROOT}/skills/keep/scripts/score_issues.py --recent-work .claude/state.md
 ```
 
 ### Context Growth

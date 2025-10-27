@@ -216,7 +216,7 @@ gh issue list --state open --json number,title,labels,body,updatedAt --limit 50
 
 Execute script via Bash (don't load into context):
 ```bash
-python skills/keep/scripts/score_issues.py \
+python ${CLAUDE_PLUGIN_ROOT}/skills/keep/scripts/score_issues.py \
   --issues "{json}" \
   --recent-work ".claude/state.md" \
   --context ".claude/state.md"
