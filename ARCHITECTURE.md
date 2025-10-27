@@ -1,48 +1,108 @@
-# Keep Architecture - Context Optimization
+# Keep Architecture
 
-This document explains Keep's optimized architecture designed to minimize context usage while maximizing functionality.
+This document explains Keep's two-layer architecture: a **proactive skill layer** for recognition and suggestion, built on top of an **optimized execution layer** for minimal context usage.
+
+## Architectural Layers
+
+Keep has two distinct architectural layers:
+
+### Layer 1: Proactive Skill (Model-Invoked Recognition)
+
+The skill layer (`skills/keep/SKILL.md`) teaches Claude to **autonomously recognize** when project memory would help and **proactively suggest** commands. This is the most important architectural component.
+
+**Key characteristics:**
+- **Model-invoked:** Claude decides when to use Keep based on conversation context
+- **Recognition-focused:** Contains patterns for identifying Keep moments (not implementation)
+- **User-experience layer:** Makes Keep feel natural and integrated
+
+**What it does:**
+- Watches for user signals: "I'm starting on issue #42", "I learned that...", "What should I work on?"
+- Maps signals to appropriate commands: `/keep-start`, `/keep-save`, `/keep-done`, `/keep-grow`
+- Suggests commands conversationally with context-specific value propositions
+- Checks preconditions (Is Keep installed? Do files exist? Is GitHub available?)
+
+**What it doesn't do:**
+- Execute workflows (delegates to agents)
+- Load implementation details (references stay external)
+- Force rigid processes (adapts to user preferences)
+
+This layer transforms Keep from "a set of commands you need to remember" into "an intelligent assistant that recognizes when you need project memory."
+
+### Layer 2: Optimized Execution (Sub-Agent Architecture)
+
+The execution layer uses sub-agents and granular references to minimize context usage while maintaining full functionality.
+
+**Key characteristics:**
+- **Context isolation:** Each workflow operates in separate context window
+- **Minimal loading:** Only workflow-specific instructions loaded
+- **On-demand references:** Load details only when needed
+- **Script execution:** Run Python scripts without loading code into context
+
+**Benefits:**
+- 65-80% context reduction per command
+- More room for actual work
+- Faster execution
+- Easier maintenance
 
 ## Design Principles
 
 Based on Claude Code's best practices for skills and sub-agents:
 
-1. **Progressive Disclosure** - Load only what's needed, when needed
-2. **Context Isolation** - Each workflow operates in its own context window
-3. **Tool Restrictions** - Each sub-agent only gets tools it requires
-4. **Lazy Loading** - References loaded on-demand, not upfront
+1. **Proactive Recognition** - Claude suggests commands at natural moments (Layer 1)
+2. **Progressive Disclosure** - Load only what's needed, when needed (Layer 2)
+3. **Context Isolation** - Each workflow operates in its own context window (Layer 2)
+4. **Tool Restrictions** - Each sub-agent only gets tools it requires (Layer 2)
+5. **Lazy Loading** - References loaded on-demand, not upfront (Layer 2)
 
 ## Architecture Overview
 
+### Full Flow: Recognition → Execution
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ User invokes: /keep-start 123                               │
+│ User: "I'm going to start working on issue 42"              │
 └───────────────────────┬─────────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Slash Command (.claude/commands/keep-start.md)              │
+│ LAYER 1: Proactive Skill (skills/keep/SKILL.md)             │
+│ - Recognizes "starting work" signal                         │
+│ - Maps to /keep-start command                               │
+│ - Suggests: "Use /keep-start 42 to load context..."         │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│ User accepts (or invokes /keep-start 42 directly)           │
+└───────────────────────┬─────────────────────────────────────┘
+                        │
+                        ▼
+┌─────────────────────────────────────────────────────────────┐
+│ LAYER 2a: Slash Command (commands/keep-start.md)            │
 │ - Minimal wrapper (~30 lines)                               │
 │ - Delegates to sub-agent via Task tool                      │
 └───────────────────────┬─────────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ Sub-Agent (.claude/agents/keep-start.md)                    │
+│ LAYER 2b: Sub-Agent (agents/keep-start.md)                  │
 │ - Focused workflow instructions (~120 lines)                │
 │ - Tools: Read, Bash, Write, Glob, Grep                      │
 │ - Operates in own context window                            │
 │ - Loads references only if needed                           │
-└─────────────────────────────────────────────────────────────┘
+└───────────────────────┬─────────────────────────────────────┘
                         │
                         ▼ (only if needed)
 ┌─────────────────────────────────────────────────────────────┐
-│ References (loaded on-demand)                               │
+│ LAYER 2c: References (loaded on-demand)                     │
 │ - file-formats.md (only when creating files)                │
 │ - zero-issues.md (only when no issues exist)                │
 │ - troubleshooting.md (only when errors occur)               │
 │ - templates/*.md (only when posting to GitHub)              │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**Key insight:** The skill layer makes Keep feel natural and proactive. Users don't need to remember commands - Claude recognizes moments and suggests them. The execution layer then handles the workflow efficiently with minimal context usage.
 
 ## Context Usage Comparison
 
@@ -100,21 +160,56 @@ Each Keep command loads:
 
 **Context savings:** Doesn't load any workflow logic
 
-## Main Skill.md Role
+## Main Skill.md Role (Layer 1)
 
-The main `SKILL.md` (222 lines, reduced from 341) now serves as:
-- **Philosophy document** - Core principles and approach
-- **Router/index** - Points to sub-agents for each workflow
-- **Quick reference** - Overview of file organization and patterns
+The main `SKILL.md` (~284 lines) is the **proactive recognition engine**:
 
-It's loaded when:
+### Primary Purpose: Autonomous Recognition
+- **Recognition patterns** - Identifies when users would benefit from Keep
+- **Signal mapping** - Maps user behaviors to appropriate commands
+- **Suggestion guidance** - How to present commands conversationally
+- **Context checks** - Preconditions to verify before suggesting
+
+### Secondary Purpose: Delegation Reference
+- **Command overview** - Brief description of what each command does
+- **When to suggest** - Specific moments to offer each command
+- **Agent delegation** - Points to sub-agents for execution (not implementation details)
+
+### Example Recognition Patterns
+```
+User: "I decided to use Redis because..."
+→ Recognizes: Decision with rationale
+→ Suggests: /keep-save to capture learning
+→ Value prop: "Won't have to rediscover this later"
+
+User: "What should I work on?"
+→ Recognizes: Asking for direction
+→ Suggests: /keep-start (no issue number)
+→ Value prop: "Recommends based on recent work and priority"
+```
+
+### What Changed from Original
+**Before (341 lines):** Implementation documentation
+- How agents work
+- File format details
+- GitHub integration mechanics
+- Internal architecture
+
+**After (284 lines):** Recognition and suggestion guide
+- User signal patterns
+- When to suggest commands
+- How to be proactive without being intrusive
+- Conversation examples
+
+### Loading Characteristics
+**Loaded when:**
+- User exhibits behavior matching recognition patterns (autonomous)
+- Claude needs to decide if Keep would help (continuous background awareness)
 - User asks about Keep generally
-- Documentation is needed
-- Router information is needed
 
-It's **NOT** loaded when:
-- Executing specific workflows (sub-agents handle that)
-- Loading references (they're independent)
+**NOT loaded when:**
+- Executing workflows (sub-agents handle implementation)
+- Loading references (kept separate)
 
 ## Reference Files
 
@@ -432,16 +527,27 @@ If seeing higher usage, check if references being loaded unnecessarily.
 
 ## Conclusion
 
-The sub-agent architecture provides:
+Keep's two-layer architecture delivers both **excellent user experience** and **optimal performance**:
+
+### Layer 1: Proactive Skill
+- **Model-invoked recognition** - Claude autonomously suggests commands at natural moments
+- **No mental overhead** - Users don't need to remember workflows
+- **Natural integration** - Keep suggestions feel like helpful teammate
+- **Context-aware** - Adapts to user pace and preferences
+
+### Layer 2: Optimized Execution
 - **Significant context reduction** (65-80% typical)
 - **Better context isolation** (separate windows per workflow)
 - **Easier maintenance** (update workflows independently)
 - **Future flexibility** (easy to extend)
 
-All while maintaining:
-- **100% backward compatibility**
-- **Same user experience**
-- **No configuration changes**
-- **Same file formats**
+### Together
+The proactive skill layer makes Keep feel **effortless and intelligent**, while the optimized execution layer ensures it stays **fast and efficient**. Users get intelligent project memory without ceremony or performance cost.
 
-This optimization makes Keep more efficient, leaving more context available for your actual work while providing the same intelligent project memory features.
+All while maintaining:
+- **100% backward compatibility** with existing work files
+- **Same file formats** for tracking and state
+- **No configuration required** - works out of the box
+- **Graceful degradation** - works offline, without GitHub
+
+Keep transforms from "a set of commands" into "an intelligent assistant that knows when you need project memory."

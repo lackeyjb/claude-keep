@@ -2,7 +2,7 @@
 
 > Lightweight, intelligent project memory for Claude Code
 
-Keep helps you track work on GitHub issues, capture learnings as you code, and grow project context naturally through CLAUDE.md files.
+Keep helps you track work, capture learnings as you code, and grow project context naturally through CLAUDE.md files. Claude proactively suggests Keep commands at the right moments - no need to remember workflows or invoke commands manually.
 
 ## What is Keep?
 
@@ -20,6 +20,27 @@ Keep is a skill + commands system for Claude Code that provides:
 - **Solo-optimized** - built for individual developers, not enterprise ceremony
 - **Graceful degradation** - works offline, without GitHub, with minimal files
 - **Intelligence over automation** - suggests and learns, doesn't enforce rigid processes
+
+## How Keep Works
+
+**Keep is a proactive skill** - Claude recognizes when you would benefit from project memory and suggests commands naturally during your conversation.
+
+You don't need to remember commands or invoke them manually. Instead, Claude watches for moments like:
+- **Starting work:** "I'm going to work on issue #42" → Claude suggests `/keep-start 42`
+- **Making decisions:** "I decided to use Redis because..." → Claude suggests `/keep-save`
+- **Completing tasks:** "Tests pass, feature is done" → Claude suggests `/keep-done`
+- **Needing context:** "How does auth work?" → Claude checks for CLAUDE.md, suggests `/keep-grow src/auth/` if missing
+
+Keep integrates seamlessly into your workflow without ceremony:
+```
+You: "I learned that the rate limiter must be initialized before the router"
+Claude: "That's an important gotcha! Use /keep-save to capture this learning
+        so you won't have to rediscover it later. Want me to save it?"
+You: "Sure"
+Claude: *captures the learning and tracks it in your work file*
+```
+
+**You can still invoke commands directly** via `/keep-start`, `/keep-save`, `/keep-done`, and `/keep-grow` - but Claude's proactive suggestions mean you rarely need to.
 
 ## Quick Start
 
