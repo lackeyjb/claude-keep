@@ -1,232 +1,283 @@
 ---
 name: keep
-description: Intelligent project memory and workflow management. Use when working with GitHub issues, capturing project learnings, managing CLAUDE.md context files, or deciding what to work on next.
+description: Project memory and workflow management for software development. Use when user mentions starting work, completing tasks, making technical decisions, capturing learnings, documenting patterns, needing context about code, or asking what to work on next. Proactively suggest tracking work, capturing insights, and growing project context. Integrates with GitHub issues when available.
 ---
 
-# Keep - Intelligent Project Memory
+# Keep - Proactive Project Memory
 
-Keep provides intelligent project memory through structured issue tracking, automatic learning capture, proactive context evolution, and seamless GitHub integration.
+Keep is a skill that helps you recognize when users would benefit from project memory and proactively suggest the right commands. Keep tracks work, captures learnings as they happen, and grows project context through CLAUDE.md files. It integrates with GitHub issues when available but works offline too.
 
-## Core Philosophy
+## Your Role
 
-**Intelligence over automation**
-- Suggest when valuable, don't overwhelm
-- Learn patterns, don't just log actions
-- Adapt to project needs
+As Claude, you should **proactively recognize moments** when Keep would help the user and naturally suggest the appropriate command. Don't wait for users to remember Keep exists - notice patterns in conversation and offer Keep at the right moments.
 
-**Minimal ceremony, maximum value**
-- Capture what matters, skip the rest
-- Focus on "why" not just "what"
-- Make it useful for future you (6 months later)
+## Recognition Patterns
 
-**Leverage Claude Code's native capabilities**
-- CLAUDE.md files auto-load (no manual loading needed)
-- Use Claude's tools (Glob, Grep, Read, Edit, Bash)
-- Progressive disclosure - load details when needed
+Watch for these user behaviors and phrases that indicate Keep moments:
 
-**Fail gracefully**
-- Work offline without GitHub
-- Degrade features, don't break workflows
-- Preserve user data above all else
-- Never silently delete or overwrite
+### Starting Work
+**User signals:**
+- "I'm going to start on issue #123"
+- "Let me work on that bug"
+- "I'll tackle the authentication feature"
+- "What should I work on?" or "What should I do next?"
+- Beginning implementation work without tracking
 
-## Workflow Delegation
+**Your response:** Suggest `/keep-start [issue-number]` or `/keep-start` for recommendations
 
-Keep delegates to specialized sub-agents for each workflow:
-
-**`/keep-start [issue]`** → `agents/keep-start.md`
-- Fetch issue from GitHub
-- Load project context
-- Create work tracking file
-- Present informed starting point
-- Handle zero-issues project initialization
-
-**`/keep-save [--sync]`** → `agents/keep-save.md`
-- Capture progress and learnings
-- Update work file and state
-- Suggest CLAUDE.md updates when patterns emerge
-- Optional sync to GitHub
-
-**`/keep-done [--close]`** → `agents/keep-done.md`
-- Generate comprehensive summary
-- Detect and handle PR state
-- Sync to GitHub with smart closing
-- Archive work and recommend next issue
-
-**`/keep-grow [directory]`** → `agents/keep-grow.md`
-- Analyze directory for patterns
-- Create or update CLAUDE.md
-- Grow project context deliberately
-
-Each sub-agent operates in its own context with only the tools and knowledge it needs.
-
-## File Organization
-
-**Plugin structure** (installed via `/plugin install keep`):
+**Example:**
 ```
-keep/
-├── .claude-plugin/
-│   ├── plugin.json          # Plugin metadata
-│   └── marketplace.json     # Marketplace configuration
-├── agents/                  # Workflow sub-agents (invoked by commands)
-│   ├── keep-start.md
-│   ├── keep-save.md
-│   ├── keep-done.md
-│   └── keep-grow.md
-├── commands/                # Slash commands (thin wrappers)
-│   ├── keep-start.md
-│   ├── keep-save.md
-│   ├── keep-done.md
-│   └── keep-grow.md
-└── skills/keep/
-    ├── SKILL.md             # This file - minimal core philosophy
-    ├── references/          # Load as needed
-    │   ├── file-formats.md        # File format specs
-    │   ├── zero-issues.md         # Discovery patterns
-    │   ├── troubleshooting.md     # Error handling
-    │   ├── workflows.md           # Detailed examples
-    │   └── templates/
-    │       ├── github-progress.md
-    │       └── github-completion.md
-    └── scripts/             # Execute without loading
-        ├── score_issues.py
-        └── github_sync.py
+User: "I'm going to start working on issue 42"
+You: "Great! Let me help you start with full context. Use `/keep-start 42` to:
+- Load the issue details from GitHub
+- See relevant CLAUDE.md files and past work
+- Create a tracking file for decisions and learnings
+Would you like me to run that for you?"
 ```
 
-**User project structure** (auto-created in user's projects):
+### Making Decisions or Learning
+**User signals:**
+- "I decided to use X instead of Y because..."
+- "That was tricky, the API doesn't..."
+- "I learned that you have to..."
+- "Gotcha: make sure to..."
+- "The important thing is..."
+- Explaining technical choices with rationale
+- Discovering non-obvious behaviors
+- Finding workarounds or patterns
+
+**Your response:** Suggest `/keep-save` to capture the insight
+
+**Example:**
 ```
-your-project/
-├── CLAUDE.md            # Root context (suggested by Keep)
-└── .claude/
-    ├── state.md         # Current session state (auto-created)
-    ├── work/            # Active work tracking (auto-created)
-    │   └── {issue}.md
-    └── archive/         # Completed work (auto-created)
-        └── {issue}.md
+User: "I figured it out - the rate limiter needs to be initialized before the router, otherwise it doesn't catch requests"
+You: "That's an important gotcha! This would be valuable to capture in your work tracking. Use `/keep-save` to:
+- Record this learning with context
+- Track it for future reference
+- Potentially suggest updating CLAUDE.md if patterns emerge
+Want me to help you save this?"
 ```
 
-## State Management
+### Completing Work
+**User signals:**
+- "I'm done with this issue"
+- "That's finished" or "All set"
+- "The feature is complete"
+- "I'm ready to move on"
+- Finishing implementation and tests
 
-**`.claude/state.md`** - Current session state
-- Active work (current issue, progress, next steps)
-- Recent work (last 3 completed issues)
-- Blockers and context
+**Your response:** Suggest `/keep-done` to complete and move forward
 
-**`.claude/work/{issue}.md`** - Detailed issue tracking
-- Issue metadata and description
-- Progress log (timestamped entries)
-- Decisions made (with rationale)
-- Learnings and insights
-- Files modified
-- Tests and next actions
+**Example:**
+```
+User: "Okay, the authentication feature is done and tests pass"
+You: "Nice work! Let's wrap this up properly with `/keep-done`. This will:
+- Generate a completion summary for GitHub
+- Detect any PR and handle closing smartly
+- Recommend your next issue based on continuity
+- Archive your work tracking
+Should I run that?"
+```
 
-**`.claude/archive/{issue}.md`** - Completed work
-- Preserved for reference
-- Searchable for related patterns
-- Source for CLAUDE.md suggestions
+### Needing Context or Documentation
+**User signals:**
+- "What does this module do?"
+- "I don't understand how X works"
+- "Is there documentation for this?"
+- Working in directory without CLAUDE.md
+- Repeatedly asking about patterns in same area
+- "How should I approach this?"
 
-## CLAUDE.md Evolution
+**Your response:** Check if CLAUDE.md exists, suggest `/keep-grow [directory]` if missing or outdated
 
-**When to suggest updates:**
-- 3+ decisions in same directory
-- 2+ sessions in same directory
-- Recurring patterns emerge
-- Security or performance insights
+**Example:**
+```
+User: "How does the authentication system work?"
+You: *checks for src/auth/CLAUDE.md* "I don't see a CLAUDE.md file in src/auth/. Let me analyze the code to help you now, and then we should use `/keep-grow src/auth` to create documentation so you have this context available automatically in future sessions. Sound good?"
+```
 
-**How to suggest:**
-- Detect threshold during work
-- Generate specific proposal
-- Show complete diff
-- Get user approval
-- Never force updates
+### Asking for Direction
+**User signals:**
+- "What should I work on?"
+- "What's next?"
+- "What issue should I tackle?"
+- "I'm ready for more work"
 
-**What makes good CLAUDE.md:**
-- Purpose - What this module does and why
-- Key Patterns - Important abstractions
-- API/Interface - How to interact
-- Recent Learnings - Gotchas and insights
-- Common Mistakes - What to avoid
-- Dependencies - What this relies on
-- Testing - How to test
+**Your response:** Suggest `/keep-start` without issue number for recommendations
 
-## GitHub Integration
+**Example:**
+```
+User: "What should I work on next?"
+You: "Let's find your best next issue! Use `/keep-start` (without an issue number) and I'll:
+- Recommend issues based on what you worked on recently (hot cache)
+- Consider priority labels and dependencies
+- Suggest issues that build on your current context
+Want me to run that?"
+```
 
-**Graceful degradation:**
-- Check for `gh` CLI: `which gh`
-- If missing → Warn, offer local-only mode
-- If network error → Save locally, note sync needed
-- If rate limit → Wait or continue with local data
-- Never fail workflow due to GitHub issues
+## Command Guidance
 
-**PR-aware closing:**
-- Merged PR → Issue auto-closes (respect this)
-- Open PR → Don't close (will auto-close on merge)
-- Closed PR → Ask about closing issue
-- No PR → Standard close confirmation
+### `/keep-start [issue-number]`
+**When to suggest:**
+- User mentions starting work on specific issue
+- User asks what to work on next (omit issue number)
+- Beginning a coding session
+- User seems to have lost context on what they're working on
 
-## References
+**What it does:**
+- Fetches issue from GitHub (if available)
+- Loads relevant CLAUDE.md files and past work
+- Creates work tracking file
+- Presents informed starting point
+- Recommends starter issues if none specified
 
-Load these files only when needed:
+### `/keep-save [--sync]`
+**When to suggest:**
+- User makes technical decisions with rationale
+- User learns gotchas or non-obvious behaviors
+- User discovers patterns or workarounds
+- Natural checkpoint in conversation (every 30-45 minutes of active work)
+- User mentions wanting to remember something
 
-**`references/file-formats.md`** - Complete file format specifications
-- Load when creating files or need format details
+**What it does:**
+- Captures progress, decisions, and learnings
+- Updates work file with timestamped entries
+- Suggests CLAUDE.md updates when patterns emerge (3+ decisions in area)
+- Optionally syncs progress to GitHub with `--sync` (if GitHub available)
 
-**`references/zero-issues.md`** - Zero-issues discovery patterns
-- Load only when no issues exist
+### `/keep-done [--close]`
+**When to suggest:**
+- User completes implementation and tests
+- User says work is finished
+- User ready to move to next issue
+- PR has been created and work is wrapped up
 
-**`references/workflows.md`** - Detailed workflow examples with diagrams
-- Load when need detailed workflow guidance
+**What it does:**
+- Generates comprehensive completion summary
+- Detects PR state and handles closing intelligently (if GitHub available)
+- Posts summary to GitHub issue (if GitHub available)
+- Archives work tracking
+- Recommends next issue based on continuity
 
-**`references/troubleshooting.md`** - Error handling and recovery
-- Load when encountering errors
+### `/keep-grow [directory]`
+**When to suggest:**
+- User asks about module/directory without CLAUDE.md
+- User repeatedly asks questions about same area
+- User expresses confusion about how something works
+- After capturing 3+ decisions in same directory (Keep will suggest this via /keep-save)
+- User wants to document patterns manually
 
-**`references/templates/github-progress.md`** - Progress update template
-- Load when posting progress to GitHub
+**What it does:**
+- Analyzes directory for patterns and abstractions
+- Generates or updates CLAUDE.md file
+- Creates valuable context for future sessions
+- Gets user approval before writing
 
-**`references/templates/github-completion.md`** - Completion summary template
-- Load when posting completion to GitHub
+## Context Awareness
 
-## Scripts
+Before suggesting Keep commands, check:
 
-Execute these via Bash without loading into context:
+1. **Is Keep installed?** If commands fail, guide user to install via `/plugin install keep`
+2. **Does .claude/state.md exist?** If not, this is first use - Keep will auto-create structure
+3. **Is user actively working?** Look for .claude/work/*.md files
+4. **Do CLAUDE.md files exist?** Check relevant directories before suggesting /keep-grow
+5. **Is GitHub available?** Keep works offline, but some features enhanced with `gh` CLI
 
-**`scripts/score_issues.py`** - Issue scoring for recommendations
-- Implements continuity + priority + freshness + dependency algorithm
-- Execute via Bash, don't load code
+## Integration Principles
 
-**`scripts/github_sync.py`** - GitHub API helper
-- Advanced GitHub operations when `gh` CLI insufficient
+**Be helpful, not intrusive:**
+- Suggest Keep at natural moments, not after every statement
+- If user declines, don't keep asking
+- Balance being proactive with not overwhelming
+- Focus on valuable moments (decisions, learnings, transitions)
 
-## Best Practices
+**Make it conversational:**
+- Don't just say "use /keep-save" - explain why and what it does
+- Offer to run commands, don't demand
+- Connect Keep suggestions to user's immediate needs
+- Show value: "This will help you remember X" or "You won't have to explain this again"
 
-**Respect user control:**
-- Always get approval for CLAUDE.md updates
-- Show complete changes, not summaries
-- Offer edit option, not just yes/no
-- Never force workflow steps
-
-**Be concise yet complete:**
-- Capture key information without verbosity
-- Focus on "why" not just "what"
-- Make notes useful for future reference
+**Respect user workflow:**
+- Don't interrupt deep work to suggest saving
+- Wait for natural pauses or completions
+- If user is rushing, don't add ceremony
+- Adapt to their pace and preferences
 
 **Progressive disclosure:**
-- Don't load all references upfront
-- Load details only when needed
-- Present information conversationally
+- First mention: Explain what command does
+- Subsequent uses: Brief reminders
+- If user seems comfortable: Just suggest command
+- Learn from their responses
 
-**Learn and adapt:**
-- Notice when patterns emerge
-- Suggest context updates proactively but not annoyingly
-- Help context evolve with project
+## How Commands Work (Internal)
+
+Keep delegates to specialized sub-agents in `agents/` directory:
+- `/keep-start` → `agents/keep-start.md` (fetch issue, load context, create tracking)
+- `/keep-save` → `agents/keep-save.md` (capture progress, suggest CLAUDE.md updates)
+- `/keep-done` → `agents/keep-done.md` (summarize, sync, archive, recommend next)
+- `/keep-grow` → `agents/keep-grow.md` (analyze directory, create/update CLAUDE.md)
+
+Each agent operates in its own context window and handles its workflow autonomously. As the Skill, your job is to **recognize when** to suggest these commands, not to implement them.
+
+## References for Sub-Agents
+
+When commands are invoked, agents may load these references:
+
+- `references/file-formats.md` - File format specifications for work tracking
+- `references/zero-issues.md` - Discovery patterns when no issues exist
+- `references/workflows.md` - Detailed workflow examples
+- `references/troubleshooting.md` - Error handling
+- `references/templates/` - GitHub update templates
+
+**You don't need to load these** - agents handle implementation details. Focus on recognition and suggestion.
 
 ---
 
-Keep provides intelligent project memory without ceremony:
-- Start work with full context
-- Capture learnings automatically
-- Evolve CLAUDE.md files deliberately
-- Seamless GitHub integration
-- Smart next work recommendations
+## Example Conversations
 
-Focus on being helpful, not intrusive. Suggest when valuable, don't overwhelm. Learn from patterns, adapt to project needs. Make project memory effortless and valuable.
+### Example 1: Natural Decision Capture
+```
+User: "I'm using JWT tokens for auth. I considered sessions but JWTs are better for our API-first architecture since we don't need server state"
+
+You: "That's a solid architectural decision! Since you have clear rationale, this would be great to capture. Use `/keep-save` to record this decision - if you make more auth-related decisions, Keep will suggest documenting the auth patterns in a CLAUDE.md file for future reference. Want me to save this?"
+
+User: "Sure"
+
+You: *executes /keep-save*
+```
+
+### Example 2: Starting Fresh
+```
+User: "What should I work on?"
+
+You: "Let me help you find your next issue! Use `/keep-start` and I'll recommend issues based on:
+- What you worked on recently (hot cache benefits)
+- Priority labels
+- Dependencies that are now unblocked
+
+Want me to run that?"
+```
+
+### Example 3: Recognizing Completion
+```
+User: "Okay, tests pass and PR is up"
+
+You: "Nice! Looks like you're ready to wrap up. Use `/keep-done` to:
+- Generate a completion summary for the GitHub issue
+- Let Keep detect your PR and handle closing properly
+- Get recommendations for your next issue
+- Archive this work for future reference
+
+Should I run that?"
+```
+
+### Example 4: Context Gaps
+```
+User: "How does the rate limiting work in this API?"
+
+You: *searches and doesn't find src/api/CLAUDE.md* "Let me check the code... [explains rate limiting]. By the way, there's no CLAUDE.md in src/api/ yet. After you're comfortable with how it works, we could use `/keep-grow src/api` to document these patterns so they're automatically available in future sessions. Worth doing when you have a moment."
+```
+
+---
+
+**Remember:** Your goal is to make project memory effortless. Recognize Keep moments naturally, suggest commands helpfully, and help users build context without ceremony. Be proactive but not pushy, helpful but not intrusive.
