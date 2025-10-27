@@ -4,143 +4,39 @@ description: Complete work on current issue and sync to GitHub
 
 # Keep: Complete Work
 
-Load the Keep skill to complete work on the current issue.
-
-## Task
-
-Invoke the Keep skill by loading `.claude/skills/keep/SKILL.md` to complete the current issue.
-
-## Instructions
-
-1. Load the Keep skill
-2. Follow the "Completing Work" workflow from the skill
-3. Ensure active work file exists (`.claude/work/{issue}.md`)
-
-## Expected Outcome
-
-The Keep skill should:
-- Read complete work file
-- Aggregate all progress, decisions, learnings
-- Generate comprehensive summary:
-  - What was accomplished (outcomes)
-  - Why decisions were made (rationale)
-  - What was learned (insights)
-  - What was tested (status)
-  - What follow-up needed (if any)
-- Check for context updates:
-  - Review all learnings
-  - Identify which CLAUDE.md files should be updated
-  - Generate proposals
-  - Get approval
-- **Detect associated PR:**
-  - Check for PR on current branch: `gh pr view --json state,number,url`
-  - If PR exists, store PR URL in work file
-  - Parse PR state (open, merged, closed)
-- Sync to GitHub:
-  - Post completion summary as issue comment (include PR link if exists)
-  - **Smart issue closing (PR-aware):**
-    - If **PR merged**: Check if issue already closed. Don't ask - note "issue auto-closed via PR #X"
-    - If **PR open**: Don't close issue. Inform user it will auto-close when PR merges
-    - If **PR closed (unmerged)**: Ask if they want to close issue manually
-    - If **no PR**: Ask about closing issue (current behavior)
-  - If closing confirmed/needed: `gh issue close {number}`
-- Archive work file:
-  - Move `.claude/work/{issue}.md` to `.claude/archive/`
-  - Preserve all content (including PR info)
-- Update state:
-  - Clear active issue
-  - Add to recent work
-  - Update context (hot areas)
-- Recommend next work:
-  - Fetch open issues from GitHub
-  - Score using algorithm (continuity + priority + freshness + dependencies)
-  - Present top 3-5 recommendations
-  - Offer to start immediately
+Delegate to the keep-done sub-agent to complete work on the current issue.
 
 ## Flags
 
+{{#if args}}
+Flags: {{args}}
+{{else}}
+No flags provided.
+{{/if}}
+
+Supported flags:
 - `--close` - Close the GitHub issue without asking
 - `--no-close` - Leave issue open without asking
 - `--no-sync` - Skip GitHub sync (local only)
 - `--no-recommend` - Skip next work recommendations
 
-## Error Handling
+## Delegation
 
-If no active work found:
-- Check `.claude/state.md` for active issue
-- If found but no work file, warn and offer to create from GitHub
-- If not found, inform user - nothing to complete
+Use the Task tool to invoke the keep-done sub-agent:
 
-If PR detection fails:
-- Continue with workflow (treat as no PR)
-- Note that PR detection unavailable
-- Fall back to asking about closing issue
+**Sub-agent:** keep-done
+**Task:** Complete work on current issue{{#if args}} with flags: {{args}}{{/if}}
 
-If GitHub sync fails:
-- Archive work file locally
-- Note that sync needed
-- Don't fail the workflow
-- Preserve all captured data
-- User can manually sync later
+The keep-done sub-agent will:
+1. Read complete work file
+2. Generate comprehensive summary
+3. Check for context updates
+4. Detect associated PR (if exists)
+5. Sync to GitHub with PR-aware closing
+6. Archive work file to `.claude/archive/`
+7. Update `.claude/state.md`
+8. Recommend next work (unless --no-recommend)
 
-If next work recommendations fail:
-- Continue with completion
-- Note that recommendations unavailable
-- User can run `/keep-next` manually
+## Expected Behavior
 
-## GitHub Summary Format
-
-The completion comment posted to GitHub should follow this format:
-
-```markdown
-## ✅ Work Complete - {date} {time}
-
-{If PR exists: Completed via PR #{number}}
-
-### Summary
-{1-2 paragraph summary of what was accomplished and why}
-
-### Changes Made
-- {file}: {what changed}
-- {file}: {what changed}
-
-### Key Decisions
-1. **{decision}**: {rationale}
-2. **{decision}**: {rationale}
-
-### Testing
-- ✅ {test type} passing
-- ⏸️ {test type} needed
-
-### Learnings
-{key insights captured}
-
-### Follow-up
-- {follow-up item if any}
-```
-
-## Example Usage
-
-```
-/keep-done
-```
-
-Completes work, posts summary to GitHub, asks about closing, recommends next.
-
-```
-/keep-done --close
-```
-
-Completes work, posts summary, closes issue, recommends next.
-
-```
-/keep-done --no-sync
-```
-
-Completes work locally only, no GitHub interaction.
-
-```
-/keep-done --no-recommend
-```
-
-Completes work and syncs but skips next work recommendations.
+The sub-agent operates in its own context window with focused tools (Read, Bash, Edit, Grep) and will guide you through completion and recommend next work.

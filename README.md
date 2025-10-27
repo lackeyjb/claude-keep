@@ -219,6 +219,23 @@ Optional but powerful:
 - Generates professional completion summaries
 - Gracefully degrades when offline
 
+### Optimized Context Usage
+
+Keep uses a sub-agent architecture for minimal context consumption:
+- **65-80% reduction** in context per command vs traditional approaches
+- Each workflow (start/save/done/grow) operates in its own context window
+- References loaded on-demand only when needed
+- Main skill reduced to 222 lines (from 341)
+- No context pollution between workflows
+
+This means:
+- Faster command execution
+- More room for your actual work
+- Reduced token usage
+- Better performance on long sessions
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for technical implementation details.
+
 ## File Formats
 
 ### `.claude/work/{issue}.md`
@@ -352,10 +369,11 @@ This is a personal project but suggestions welcome! The skill is designed to be 
 
 ## Learn More
 
-- Skill documentation: `.claude/skills/keep/SKILL.md`
-- File format specs: `.claude/skills/keep/references/file-formats.md`
-- Workflow examples: `.claude/skills/keep/references/workflows.md`
-- GitHub templates: `.claude/skills/keep/references/github-templates.md`
-- Troubleshooting: `.claude/skills/keep/references/troubleshooting.md`
-- Zero-issues workflow: `.claude/skills/keep/references/zero-issues.md`
-- GitHub scripts: `.claude/skills/keep/scripts/`
+- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - Context optimization and sub-agent design
+- **Skill documentation:** `.claude/skills/keep/SKILL.md` - Core philosophy and principles
+- **File format specs:** `.claude/skills/keep/references/file-formats.md`
+- **Workflow examples:** `.claude/skills/keep/references/workflows.md`
+- **GitHub templates:** `.claude/skills/keep/references/github-templates.md`
+- **Troubleshooting:** `.claude/skills/keep/references/troubleshooting.md`
+- **Zero-issues workflow:** `.claude/skills/keep/references/zero-issues.md`
+- **GitHub scripts:** `.claude/skills/keep/scripts/`
