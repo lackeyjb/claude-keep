@@ -4,7 +4,7 @@ description: Complete work on current issue and sync to GitHub
 
 # Keep: Complete Work
 
-Delegate to the keep-done sub-agent to complete work on the current issue.
+Delegate to the done sub-agent to complete work on the current issue.
 
 ## Flags
 
@@ -22,12 +22,12 @@ Supported flags:
 
 ## Delegation
 
-Use the Task tool to invoke the keep-done sub-agent:
+Use the Task tool to invoke the done sub-agent:
 
-**Sub-agent:** keep-done
+**Sub-agent:** done
 **Task:** Complete work on current issue{{#if args}} with flags: {{args}}{{/if}}
 
-The keep-done sub-agent will:
+The done sub-agent will:
 1. Read complete work file
 2. Generate comprehensive summary
 3. Check for context updates

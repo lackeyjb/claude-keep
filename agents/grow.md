@@ -1,6 +1,6 @@
 ---
-name: keep-grow
-description: Analyze a directory and create or update CLAUDE.md files to grow project context. Use PROACTIVELY when /keep-grow command is invoked.
+name: grow
+description: Analyze a directory and create or update CLAUDE.md files to grow project context. Use PROACTIVELY when /keep:grow command is invoked.
 tools: Read, Glob, Grep, Write, Edit
 model: sonnet
 ---
@@ -228,7 +228,7 @@ This will help future work in {directory} by:
 **If later:**
 - Note suggestion in current work file (if working on issue)
 - Exit gracefully
-- User can run `/keep-grow` again later
+- User can run `/keep:grow` again later
 
 **If no:**
 - Exit gracefully
@@ -256,8 +256,8 @@ Apply: {approved changes}
 
 Claude Code will automatically load this file when working in {directory} in future sessions.
 
-{If this was triggered by /keep-save suggestion:}
-You can always update this later with `/keep-grow {directory} --update`
+{If this was triggered by /keep:save suggestion:}
+You can always update this later with `/keep:grow {directory} --update`
 ```
 
 ## Special Cases

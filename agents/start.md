@@ -1,6 +1,6 @@
 ---
-name: keep-start
-description: Start work on a GitHub issue with context loading and work file creation. Use PROACTIVELY when /keep-start command is invoked.
+name: start
+description: Start work on a GitHub issue with context loading and work file creation. Use PROACTIVELY when /keep:start command is invoked.
 tools: Read, Bash, Write, Glob, Grep
 model: sonnet
 ---
@@ -18,7 +18,7 @@ Start work on a GitHub issue by loading context, creating work tracking files, a
 
 **If no issue number (Zero-Issues Workflow):**
 1. Check if CLAUDE.md exists and is current
-   - If missing: Offer `/keep-grow .` first
+   - If missing: Offer `/keep:grow .` first
 2. Discover starter work using native tools:
    - **Planning docs** (Glob): `{ROADMAP,TODO,PLAN,BACKLOG,VISION}*.md`
    - **Code signals** (Grep): `TODO:|FIXME:|HACK:|BUG:` with `-n -B 1 -A 1`

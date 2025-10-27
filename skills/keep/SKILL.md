@@ -23,12 +23,12 @@ Watch for these user behaviors and phrases that indicate Keep moments:
 - "What should I work on?" or "What should I do next?"
 - Beginning implementation work without tracking
 
-**Your response:** Suggest `/keep-start [issue-number]` or `/keep-start` for recommendations
+**Your response:** Suggest `/keep:start [issue-number]` or `/keep:start` for recommendations
 
 **Example:**
 ```
 User: "I'm going to start working on issue 42"
-You: "Great! Let me help you start with full context. Use `/keep-start 42` to:
+You: "Great! Let me help you start with full context. Use `/keep:start 42` to:
 - Load the issue details from GitHub
 - See relevant CLAUDE.md files and past work
 - Create a tracking file for decisions and learnings
@@ -46,12 +46,12 @@ Would you like me to run that for you?"
 - Discovering non-obvious behaviors
 - Finding workarounds or patterns
 
-**Your response:** Suggest `/keep-save` to capture the insight
+**Your response:** Suggest `/keep:save` to capture the insight
 
 **Example:**
 ```
 User: "I figured it out - the rate limiter needs to be initialized before the router, otherwise it doesn't catch requests"
-You: "That's an important gotcha! This would be valuable to capture in your work tracking. Use `/keep-save` to:
+You: "That's an important gotcha! This would be valuable to capture in your work tracking. Use `/keep:save` to:
 - Record this learning with context
 - Track it for future reference
 - Potentially suggest updating CLAUDE.md if patterns emerge
@@ -66,12 +66,12 @@ Want me to help you save this?"
 - "I'm ready to move on"
 - Finishing implementation and tests
 
-**Your response:** Suggest `/keep-done` to complete and move forward
+**Your response:** Suggest `/keep:done` to complete and move forward
 
 **Example:**
 ```
 User: "Okay, the authentication feature is done and tests pass"
-You: "Nice work! Let's wrap this up properly with `/keep-done`. This will:
+You: "Nice work! Let's wrap this up properly with `/keep:done`. This will:
 - Generate a completion summary for GitHub
 - Detect any PR and handle closing smartly
 - Recommend your next issue based on continuity
@@ -88,12 +88,12 @@ Should I run that?"
 - Repeatedly asking about patterns in same area
 - "How should I approach this?"
 
-**Your response:** Check if CLAUDE.md exists, suggest `/keep-grow [directory]` if missing or outdated
+**Your response:** Check if CLAUDE.md exists, suggest `/keep:grow [directory]` if missing or outdated
 
 **Example:**
 ```
 User: "How does the authentication system work?"
-You: *checks for src/auth/CLAUDE.md* "I don't see a CLAUDE.md file in src/auth/. Let me analyze the code to help you now, and then we should use `/keep-grow src/auth` to create documentation so you have this context available automatically in future sessions. Sound good?"
+You: *checks for src/auth/CLAUDE.md* "I don't see a CLAUDE.md file in src/auth/. Let me analyze the code to help you now, and then we should use `/keep:grow src/auth` to create documentation so you have this context available automatically in future sessions. Sound good?"
 ```
 
 ### Asking for Direction
@@ -103,12 +103,12 @@ You: *checks for src/auth/CLAUDE.md* "I don't see a CLAUDE.md file in src/auth/.
 - "What issue should I tackle?"
 - "I'm ready for more work"
 
-**Your response:** Suggest `/keep-start` without issue number for recommendations
+**Your response:** Suggest `/keep:start` without issue number for recommendations
 
 **Example:**
 ```
 User: "What should I work on next?"
-You: "Let's find your best next issue! Use `/keep-start` (without an issue number) and I'll:
+You: "Let's find your best next issue! Use `/keep:start` (without an issue number) and I'll:
 - Recommend issues based on what you worked on recently (hot cache)
 - Consider priority labels and dependencies
 - Suggest issues that build on your current context
@@ -117,7 +117,7 @@ Want me to run that?"
 
 ## Command Guidance
 
-### `/keep-start [issue-number]`
+### `/keep:start [issue-number]`
 **When to suggest:**
 - User mentions starting work on specific issue
 - User asks what to work on next (omit issue number)
@@ -131,7 +131,7 @@ Want me to run that?"
 - Presents informed starting point
 - Recommends starter issues if none specified
 
-### `/keep-save [--sync]`
+### `/keep:save [--sync]`
 **When to suggest:**
 - User makes technical decisions with rationale
 - User learns gotchas or non-obvious behaviors
@@ -145,7 +145,7 @@ Want me to run that?"
 - Suggests CLAUDE.md updates when patterns emerge (3+ decisions in area)
 - Optionally syncs progress to GitHub with `--sync` (if GitHub available)
 
-### `/keep-done [--close]`
+### `/keep:done [--close]`
 **When to suggest:**
 - User completes implementation and tests
 - User says work is finished
@@ -159,12 +159,12 @@ Want me to run that?"
 - Archives work tracking
 - Recommends next issue based on continuity
 
-### `/keep-grow [directory]`
+### `/keep:grow [directory]`
 **When to suggest:**
 - User asks about module/directory without CLAUDE.md
 - User repeatedly asks questions about same area
 - User expresses confusion about how something works
-- After capturing 3+ decisions in same directory (Keep will suggest this via /keep-save)
+- After capturing 3+ decisions in same directory (Keep will suggest this via /keep:save)
 - User wants to document patterns manually
 
 **What it does:**
@@ -212,10 +212,10 @@ Before suggesting Keep commands, check:
 ## How Commands Work (Internal)
 
 Keep delegates to specialized sub-agents in `agents/` directory:
-- `/keep-start` → `agents/keep-start.md` (fetch issue, load context, create tracking)
-- `/keep-save` → `agents/keep-save.md` (capture progress, suggest CLAUDE.md updates)
-- `/keep-done` → `agents/keep-done.md` (summarize, sync, archive, recommend next)
-- `/keep-grow` → `agents/keep-grow.md` (analyze directory, create/update CLAUDE.md)
+- `/keep:start` → `agents/start.md` (fetch issue, load context, create tracking)
+- `/keep:save` → `agents/save.md` (capture progress, suggest CLAUDE.md updates)
+- `/keep:done` → `agents/done.md` (summarize, sync, archive, recommend next)
+- `/keep:grow` → `agents/grow.md` (analyze directory, create/update CLAUDE.md)
 
 Each agent operates in its own context window and handles its workflow autonomously. As the Skill, your job is to **recognize when** to suggest these commands, not to implement them.
 
@@ -239,18 +239,18 @@ When commands are invoked, agents may load these references:
 ```
 User: "I'm using JWT tokens for auth. I considered sessions but JWTs are better for our API-first architecture since we don't need server state"
 
-You: "That's a solid architectural decision! Since you have clear rationale, this would be great to capture. Use `/keep-save` to record this decision - if you make more auth-related decisions, Keep will suggest documenting the auth patterns in a CLAUDE.md file for future reference. Want me to save this?"
+You: "That's a solid architectural decision! Since you have clear rationale, this would be great to capture. Use `/keep:save` to record this decision - if you make more auth-related decisions, Keep will suggest documenting the auth patterns in a CLAUDE.md file for future reference. Want me to save this?"
 
 User: "Sure"
 
-You: *executes /keep-save*
+You: *executes /keep:save*
 ```
 
 ### Example 2: Starting Fresh
 ```
 User: "What should I work on?"
 
-You: "Let me help you find your next issue! Use `/keep-start` and I'll recommend issues based on:
+You: "Let me help you find your next issue! Use `/keep:start` and I'll recommend issues based on:
 - What you worked on recently (hot cache benefits)
 - Priority labels
 - Dependencies that are now unblocked
@@ -262,7 +262,7 @@ Want me to run that?"
 ```
 User: "Okay, tests pass and PR is up"
 
-You: "Nice! Looks like you're ready to wrap up. Use `/keep-done` to:
+You: "Nice! Looks like you're ready to wrap up. Use `/keep:done` to:
 - Generate a completion summary for the GitHub issue
 - Let Keep detect your PR and handle closing properly
 - Get recommendations for your next issue
@@ -275,7 +275,7 @@ Should I run that?"
 ```
 User: "How does the rate limiting work in this API?"
 
-You: *searches and doesn't find src/api/CLAUDE.md* "Let me check the code... [explains rate limiting]. By the way, there's no CLAUDE.md in src/api/ yet. After you're comfortable with how it works, we could use `/keep-grow src/api` to document these patterns so they're automatically available in future sessions. Worth doing when you have a moment."
+You: *searches and doesn't find src/api/CLAUDE.md* "Let me check the code... [explains rate limiting]. By the way, there's no CLAUDE.md in src/api/ yet. After you're comfortable with how it works, we could use `/keep:grow src/api` to document these patterns so they're automatically available in future sessions. Worth doing when you have a moment."
 ```
 
 ---

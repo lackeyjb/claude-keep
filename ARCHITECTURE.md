@@ -17,7 +17,7 @@ The skill layer (`skills/keep/SKILL.md`) teaches Claude to **autonomously recogn
 
 **What it does:**
 - Watches for user signals: "I'm starting on issue #42", "I learned that...", "What should I work on?"
-- Maps signals to appropriate commands: `/keep-start`, `/keep-save`, `/keep-done`, `/keep-grow`
+- Maps signals to appropriate commands: `/keep:start`, `/keep:save`, `/keep:done`, `/keep:grow`
 - Suggests commands conversationally with context-specific value propositions
 - Checks preconditions (Is Keep installed? Do files exist? Is GitHub available?)
 
@@ -67,8 +67,8 @@ Based on Claude Code's best practices for skills and sub-agents:
 ┌─────────────────────────────────────────────────────────────┐
 │ LAYER 1: Proactive Skill (skills/keep/SKILL.md)             │
 │ - Recognizes "starting work" signal                         │
-│ - Maps to /keep-start command                               │
-│ - Suggests: "Use /keep-start 42 to load context..."         │
+│ - Maps to /keep:start command                              │
+│ - Suggests: "Use /keep:start 42 to load context..."        │
 └───────────────────────┬─────────────────────────────────────┘
                         │
                         ▼
@@ -78,14 +78,14 @@ Based on Claude Code's best practices for skills and sub-agents:
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ LAYER 2a: Slash Command (commands/keep-start.md)            │
+│ LAYER 2a: Slash Command (commands/start.md)                │
 │ - Minimal wrapper (~30 lines)                               │
 │ - Delegates to sub-agent via Task tool                      │
 └───────────────────────┬─────────────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ LAYER 2b: Sub-Agent (agents/keep-start.md)                  │
+│ LAYER 2b: Sub-Agent (agents/start.md)                       │
 │ - Focused workflow instructions (~120 lines)                │
 │ - Tools: Read, Bash, Write, Glob, Grep                      │
 │ - Operates in own context window                            │
@@ -124,7 +124,7 @@ Each Keep command loads:
 
 ## Sub-Agent Breakdown
 
-### keep-start (~120 lines)
+### start (~120 lines)
 **Purpose:** Start work on issue
 **Tools:** Read, Bash, Write, Glob, Grep
 **Loads:**
@@ -134,7 +134,7 @@ Each Keep command loads:
 
 **Context savings:** Doesn't load save/done/grow logic
 
-### keep-save (~100 lines)
+### save (~100 lines)
 **Purpose:** Capture progress and learnings
 **Tools:** Read, Edit, Bash
 **Loads:**
@@ -143,7 +143,7 @@ Each Keep command loads:
 
 **Context savings:** Doesn't load start/done/grow logic
 
-### keep-done (~140 lines)
+### done (~140 lines)
 **Purpose:** Complete work and recommend next
 **Tools:** Read, Bash, Edit, Grep
 **Loads:**
@@ -152,7 +152,7 @@ Each Keep command loads:
 
 **Context savings:** Doesn't load start/save/grow logic, executes scoring script without loading code
 
-### keep-grow (~120 lines)
+### grow (~120 lines)
 **Purpose:** Create/update CLAUDE.md files
 **Tools:** Read, Glob, Grep, Write, Edit
 **Loads:**
@@ -179,12 +179,12 @@ The main `SKILL.md` (~284 lines) is the **proactive recognition engine**:
 ```
 User: "I decided to use Redis because..."
 → Recognizes: Decision with rationale
-→ Suggests: /keep-save to capture learning
+→ Suggests: /keep:save to capture learning
 → Value prop: "Won't have to rediscover this later"
 
 User: "What should I work on?"
 → Recognizes: Asking for direction
-→ Suggests: /keep-start (no issue number)
+→ Suggests: /keep:start (no issue number)
 → Value prop: "Recommends based on recent work and priority"
 ```
 
@@ -262,11 +262,11 @@ This keeps the scoring algorithm and sync logic out of context entirely.
 
 ## Detailed Context Breakdown
 
-### /keep-start Execution
+### /keep:start Execution
 
 **Loads:**
 ```
-keep-start sub-agent:           120 lines
+start sub-agent:                120 lines
 file-formats.md (if needed):    611 lines (rarely loaded)
 zero-issues.md (if needed):     509 lines (first use only)
 troubleshooting.md (on error):  528 lines (rarely)
@@ -276,11 +276,11 @@ troubleshooting.md (on error):  528 lines (rarely)
 **Maximum:** ~1200 lines (all references, rare)
 **Old approach:** 341+ lines every time
 
-### /keep-save Execution
+### /keep:save Execution
 
 **Loads:**
 ```
-keep-save sub-agent:                100 lines
+save sub-agent:                     100 lines
 templates/github-progress.md:        60 lines (if --sync)
 file-formats.md:                    611 lines (if CLAUDE.md proposal)
 ```
@@ -290,11 +290,11 @@ file-formats.md:                    611 lines (if CLAUDE.md proposal)
 **With CLAUDE.md proposal:** ~711 lines
 **Old approach:** 341+ lines every time
 
-### /keep-done Execution
+### /keep:done Execution
 
 **Loads:**
 ```
-keep-done sub-agent:                140 lines
+done sub-agent:                     140 lines
 templates/github-completion.md:      90 lines (when syncing)
 troubleshooting.md (on error):      528 lines (rarely)
 ```
@@ -302,11 +302,11 @@ troubleshooting.md (on error):      528 lines (rarely)
 **Typical usage:** ~230 lines (sub-agent + completion template)
 **Old approach:** 341+ lines every time
 
-### /keep-grow Execution
+### /keep:grow Execution
 
 **Loads:**
 ```
-keep-grow sub-agent:        120 lines
+grow sub-agent:             120 lines
 file-formats.md:            611 lines (when generating CLAUDE.md)
 ```
 
@@ -318,15 +318,15 @@ file-formats.md:            611 lines (when generating CLAUDE.md)
 ```
 .claude/
 ├── agents/                  # NEW: Workflow sub-agents
-│   ├── keep-start.md       # Start workflow (120 lines)
-│   ├── keep-save.md        # Save workflow (100 lines)
-│   ├── keep-done.md        # Done workflow (140 lines)
-│   └── keep-grow.md        # Grow workflow (120 lines)
+│   ├── start.md            # Start workflow (120 lines)
+│   ├── save.md             # Save workflow (100 lines)
+│   ├── done.md             # Done workflow (140 lines)
+│   └── grow.md             # Grow workflow (120 lines)
 ├── commands/               # UPDATED: Thin wrappers
-│   ├── keep-start.md       # Delegates to sub-agent (30 lines)
-│   ├── keep-save.md        # Delegates to sub-agent (30 lines)
-│   ├── keep-done.md        # Delegates to sub-agent (30 lines)
-│   └── keep-grow.md        # Delegates to sub-agent (30 lines)
+│   ├── start.md            # Delegates to sub-agent (30 lines)
+│   ├── save.md             # Delegates to sub-agent (30 lines)
+│   ├── done.md             # Delegates to sub-agent (30 lines)
+│   └── grow.md             # Delegates to sub-agent (30 lines)
 ├── skills/keep/
 │   ├── SKILL.md            # REDUCED: 222 lines (was 341)
 │   ├── references/         # REORGANIZED: More granular
@@ -411,13 +411,13 @@ Load only the template you need.
 
 | Command | Before | After | Savings |
 |---------|--------|-------|---------|
-| /keep-start (typical) | 341+ | ~120 | 65% |
-| /keep-save (no sync) | 341+ | ~100 | 71% |
-| /keep-save (with sync) | 341+ | ~160 | 53% |
-| /keep-done | 341+ | ~230 | 33% |
-| /keep-grow | 341+ | ~731 | -114% * |
+| /keep:start (typical) | 341+ | ~120 | 65% |
+| /keep:save (no sync) | 341+ | ~100 | 71% |
+| /keep:save (with sync) | 341+ | ~160 | 53% |
+| /keep:done | 341+ | ~230 | 33% |
+| /keep:grow | 341+ | ~731 | -114% * |
 
-\* keep-grow loads format specs which it needs anyway, so net similar
+\* keep:grow loads format specs which it needs anyway, so net similar
 
 ### Context Window Efficiency
 
@@ -425,19 +425,19 @@ With typical session (start → save → save → done):
 
 **Before:**
 ```
-/keep-start:  341 lines
-/keep-save:   341 lines
-/keep-save:   341 lines
-/keep-done:   341 lines
+/keep:start:  341 lines
+/keep:save:   341 lines
+/keep:save:   341 lines
+/keep:done:   341 lines
 Total:       1364 lines across commands
 ```
 
 **After:**
 ```
-/keep-start:  120 lines
-/keep-save:   100 lines
-/keep-save:   100 lines
-/keep-done:   230 lines
+/keep:start:  120 lines
+/keep:save:   100 lines
+/keep:save:   100 lines
+/keep:done:   230 lines
 Total:        550 lines across commands
 ```
 
@@ -519,9 +519,9 @@ Track token usage in Claude Code:
 
 | Command | Expected Context | Red Flag If > |
 |---------|------------------|---------------|
-| /keep-start (typical) | 120-250 lines | 400 lines |
-| /keep-save (no sync) | 100-200 lines | 350 lines |
-| /keep-done | 230-350 lines | 500 lines |
+| /keep:start (typical) | 120-250 lines | 400 lines |
+| /keep:save (no sync) | 100-200 lines | 350 lines |
+| /keep:done | 230-350 lines | 500 lines |
 
 If seeing higher usage, check if references being loaded unnecessarily.
 

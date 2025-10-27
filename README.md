@@ -26,21 +26,21 @@ Keep is a skill + commands system for Claude Code that provides:
 **Keep is a proactive skill** - Claude recognizes when you would benefit from project memory and suggests commands naturally during your conversation.
 
 You don't need to remember commands or invoke them manually. Instead, Claude watches for moments like:
-- **Starting work:** "I'm going to work on issue #42" → Claude suggests `/keep-start 42`
-- **Making decisions:** "I decided to use Redis because..." → Claude suggests `/keep-save`
-- **Completing tasks:** "Tests pass, feature is done" → Claude suggests `/keep-done`
-- **Needing context:** "How does auth work?" → Claude checks for CLAUDE.md, suggests `/keep-grow src/auth/` if missing
+- **Starting work:** "I'm going to work on issue #42" → Claude suggests `/keep:start 42`
+- **Making decisions:** "I decided to use Redis because..." → Claude suggests `/keep:save`
+- **Completing tasks:** "Tests pass, feature is done" → Claude suggests `/keep:done`
+- **Needing context:** "How does auth work?" → Claude checks for CLAUDE.md, suggests `/keep:grow src/auth/` if missing
 
 Keep integrates seamlessly into your workflow without ceremony:
 ```
 You: "I learned that the rate limiter must be initialized before the router"
-Claude: "That's an important gotcha! Use /keep-save to capture this learning
+Claude: "That's an important gotcha! Use /keep:save to capture this learning
         so you won't have to rediscover it later. Want me to save it?"
 You: "Sure"
 Claude: *captures the learning and tracks it in your work file*
 ```
 
-**You can still invoke commands directly** via `/keep-start`, `/keep-save`, `/keep-done`, and `/keep-grow` - but Claude's proactive suggestions mean you rarely need to.
+**You can still invoke commands directly** via `/keep:start`, `/keep:save`, `/keep:done`, and `/keep:grow` - but Claude's proactive suggestions mean you rarely need to.
 
 ## Quick Start
 
@@ -75,7 +75,7 @@ git clone https://github.com/lackeyjb/claude-keep.git
 2. Keep will automatically create `.claude/` directory structure in your projects when you first use a command
 3. Create initial project context:
    ```bash
-   /keep-grow .
+   /keep:grow .
    ```
    Keep will analyze your project and suggest creating a root CLAUDE.md with tech stack, architecture, and conventions.
 4. Start using commands!
@@ -102,15 +102,15 @@ keep/
 │   ├── plugin.json              # Plugin metadata
 │   └── marketplace.json         # Marketplace configuration
 ├── commands/
-│   ├── keep-start.md            # Start work command
-│   ├── keep-save.md             # Save progress command
-│   ├── keep-done.md             # Complete work command
-│   └── keep-grow.md             # Grow context command
+│   ├── start.md                 # Start work command
+│   ├── save.md                  # Save progress command
+│   ├── done.md                  # Complete work command
+│   └── grow.md                  # Grow context command
 ├── agents/
-│   ├── keep-start.md            # Start workflow agent
-│   ├── keep-save.md             # Save workflow agent
-│   ├── keep-done.md             # Done workflow agent
-│   └── keep-grow.md             # Grow workflow agent
+│   ├── start.md                 # Start workflow agent
+│   ├── save.md                  # Save workflow agent
+│   ├── done.md                  # Done workflow agent
+│   └── grow.md                  # Grow workflow agent
 └── skills/keep/
     ├── SKILL.md                 # Keep skill intelligence
     ├── references/              # File format specs, workflows
@@ -119,12 +119,12 @@ keep/
 
 ## Commands
 
-### `/keep-start [issue-number]`
+### `/keep:start [issue-number]`
 
 Start work on a GitHub issue with full context loading.
 
 ```bash
-/keep-start 1234
+/keep:start 1234
 ```
 
 **What it does:**
@@ -145,13 +145,13 @@ When no issue number is provided and no issues exist:
 - `--offline` - Skip GitHub, work locally only
 - `--no-fetch` - Resume existing work file
 
-### `/keep-save`
+### `/keep:save`
 
 Save progress and capture learnings.
 
 ```bash
-/keep-save
-/keep-save --sync  # Also post update to GitHub
+/keep:save
+/keep:save --sync  # Also post update to GitHub
 ```
 
 **What it does:**
@@ -165,13 +165,13 @@ Save progress and capture learnings.
 - `--sync` - Force sync to GitHub
 - `--local` - Skip GitHub sync confirmation
 
-### `/keep-done`
+### `/keep:done`
 
 Complete work and sync to GitHub.
 
 ```bash
-/keep-done
-/keep-done --close  # Also close the issue
+/keep:done
+/keep:done --close  # Also close the issue
 ```
 
 **What it does:**
@@ -194,14 +194,14 @@ Complete work and sync to GitHub.
 - `--no-sync` - Skip GitHub interaction
 - `--no-recommend` - Skip next work suggestions
 
-### `/keep-grow [directory]`
+### `/keep:grow [directory]`
 
 Create or update CLAUDE.md files for project context.
 
 ```bash
-/keep-grow .           # Analyze project root
-/keep-grow src/auth    # Analyze specific module
-/keep-grow --update    # Update existing CLAUDE.md
+/keep:grow .           # Analyze project root
+/keep:grow src/auth    # Analyze specific module
+/keep:grow --update    # Update existing CLAUDE.md
 ```
 
 **What it does:**
@@ -225,18 +225,18 @@ Create or update CLAUDE.md files for project context.
 
 ```bash
 # Start work on issue
-/keep-start 1234
+/keep:start 1234
 
 # Work on implementation...
 # (Keep observes decisions and learnings)
 
 # Save progress checkpoint
-/keep-save
+/keep:save
 
 # Continue working...
 
 # Complete and sync
-/keep-done --close
+/keep:done --close
 ```
 
 **Keep automatically:**
@@ -369,16 +369,16 @@ gh issue list --json number,title,labels,body,updatedAt | \
 Manually trigger CLAUDE.md creation or updates:
 ```bash
 # Analyze and create root CLAUDE.md
-/keep-grow .
+/keep:grow .
 
 # Document a specific module
-/keep-grow src/auth
+/keep:grow src/auth
 
 # Update existing CLAUDE.md with new patterns
-/keep-grow src/api --update
+/keep:grow src/api --update
 ```
 
-Keep also suggests CLAUDE.md updates automatically during `/keep-save` when patterns emerge (3+ decisions in same area).
+Keep also suggests CLAUDE.md updates automatically during `/keep:save` when patterns emerge (3+ decisions in same area).
 
 ## Configuration
 

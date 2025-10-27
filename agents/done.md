@@ -1,6 +1,6 @@
 ---
-name: keep-done
-description: Complete work on current issue, sync to GitHub with PR-aware closing, and recommend next work. Use PROACTIVELY when /keep-done command is invoked.
+name: done
+description: Complete work on current issue, sync to GitHub with PR-aware closing, and recommend next work. Use PROACTIVELY when /keep:done command is invoked.
 tools: Read, Bash, Edit, Grep
 model: sonnet
 ---
@@ -253,12 +253,12 @@ Start #{top-recommendation}?
 ```
 
 **If user selects issue:**
-- Automatically transition to keep-start workflow
+- Automatically transition to start workflow
 - No need to invoke command manually
 
 **If GitHub unavailable:**
 - Note recommendations unavailable
-- Suggest running `/keep-start` later
+- Suggest running `/keep:start` later
 - Continue with completion
 
 ## Error Handling

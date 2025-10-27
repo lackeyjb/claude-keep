@@ -4,7 +4,7 @@ description: Save progress and capture learnings from current work
 
 # Keep: Save Progress
 
-Delegate to the keep-save sub-agent to capture progress and learnings.
+Delegate to the save sub-agent to capture progress and learnings.
 
 ## Flags
 
@@ -20,12 +20,12 @@ Supported flags:
 
 ## Delegation
 
-Use the Task tool to invoke the keep-save sub-agent:
+Use the Task tool to invoke the save sub-agent:
 
-**Sub-agent:** keep-save
+**Sub-agent:** save
 **Task:** Save current progress{{#if args}} with flags: {{args}}{{/if}}
 
-The keep-save sub-agent will:
+The save sub-agent will:
 1. Review recent conversation
 2. Extract progress, decisions, learnings
 3. Update `.claude/work/{issue}.md`

@@ -1,6 +1,6 @@
 ---
-name: keep-save
-description: Save progress and capture learnings during active work session. Use PROACTIVELY when /keep-save command is invoked.
+name: save
+description: Save progress and capture learnings during active work session. Use PROACTIVELY when /keep:save command is invoked.
 tools: Read, Edit, Bash
 model: sonnet
 ---
@@ -19,7 +19,7 @@ Check `.claude/state.md` for active issue.
 - Check for work files in `.claude/work/`
 - If found: Reconstruct state
 - If none: Inform user - nothing to save
-- Suggest `/keep-start {number}` to begin work
+- Suggest `/keep:start {number}` to begin work
 
 ### 2. Review Recent Conversation
 
@@ -203,7 +203,7 @@ Present summary of what was saved:
 **No active work found:**
 - Read `.claude/state.md` to check
 - If state says active but no file: Offer to recreate from GitHub
-- If truly no active work: Inform user, suggest `/keep-start`
+- If truly no active work: Inform user, suggest `/keep:start`
 
 **Work file corrupted:**
 - Backup to `.claude/work/{issue}.md.backup`

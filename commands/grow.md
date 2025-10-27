@@ -4,24 +4,24 @@ description: Create or update CLAUDE.md files for project context
 
 # Keep: Grow Context
 
-Delegate to the keep-grow sub-agent to analyze a directory and create/update CLAUDE.md.
+Delegate to the grow sub-agent to analyze a directory and create/update CLAUDE.md.
 
 ## Target Directory
 
 {{#if args}}
 Target directory: {{args}}
 {{else}}
-No directory specified. The keep-grow sub-agent will default to current working directory or project root.
+No directory specified. The grow sub-agent will default to current working directory or project root.
 {{/if}}
 
 ## Delegation
 
-Use the Task tool to invoke the keep-grow sub-agent:
+Use the Task tool to invoke the grow sub-agent:
 
-**Sub-agent:** keep-grow
+**Sub-agent:** grow
 **Task:** Analyze {{#if args}}{{args}}{{else}}project directory{{/if}} and create or update CLAUDE.md
 
-The keep-grow sub-agent will:
+The grow sub-agent will:
 1. Analyze directory for patterns
 2. Assess if CLAUDE.md would be valuable
 3. Generate proposal (if valuable)
