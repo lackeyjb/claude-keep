@@ -6,10 +6,7 @@
     "name": "Bryan Lackey",
     "url": "https://github.com/lackeyjb/claude-keep"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lackeyjb/claude-keep"
-  },
+  "repository": "https://github.com/lackeyjb/claude-keep",
   "keywords": [
     "project-memory",
     "github",
