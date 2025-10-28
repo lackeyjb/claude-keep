@@ -4,7 +4,7 @@ description: Start work on a GitHub issue with full context loading
 
 # Keep: Start Work
 
-Delegate to the start sub-agent to begin work on a GitHub issue.
+Orchestrate work startup by coordinating gatekeepers and the start sub-agent.
 
 ## Issue Number
 
@@ -16,34 +16,119 @@ No issue number provided. The start sub-agent will help you discover starter wor
 
 ## Pre-Flight Checks
 
-Before delegating to the start sub-agent:
+Before workflow execution:
 
 1. **Verify `.claude/` directory exists**
-   - If missing: create it
-   - Create `.claude/work/` and `.claude/archive/` subdirectories
+   - If missing: create it with subdirectories
+   ```bash
+   mkdir -p .claude/work .claude/archive
+   ```
 
 2. **Verify `.claude/state.md` format**
-   - If missing: will be created by sub-agent
+   - If missing: will be created during workflow
    - If exists but malformed: warn user, offer to repair
 
-3. **Check for active work**
-   - If active work exists and recent: suggest resuming with `/keep:start {issue}`
-   - If active work exists but old: suggest refreshing
+## Workflow Orchestration
 
-## Delegation
+### Step 1: Resume Detection (If Issue Number Provided)
 
-Use the Task tool to invoke the start sub-agent:
+{{#if args}}
+**Call state-gatekeeper for resume detection:**
 
-**Sub-agent:** start
-**Task:** Start work on {{#if args}}issue #{{args}}{{else}}a new issue (zero-issues discovery if no issues exist){{/if}}
+Use Task tool with sub-agent `state-gatekeeper`:
+- **Operation:** "Verify Work File Exists"
+- **Input:** Issue number {{args}}
+- **Returns:** work_file_exists (boolean), work_file_path, metadata, freshness
 
-The start sub-agent will:
-1. {{#if args}}Fetch issue #{{args}} from GitHub{{else}}Discover starter work or fetch specified issue{{/if}}
-2. Load relevant context (CLAUDE.md files, state, archive)
-3. Create `.claude/work/{{#if args}}{{args}}{{else}}{issue-number}{{/if}}.md`
-4. Update `.claude/state.md`
-5. Present comprehensive starting point
+**Handle result:**
 
-## Expected Behavior
+- **If work file DOES NOT exist:** Continue to Step 2 (fresh start)
+- **If work file EXISTS:** Check freshness:
+  - **Recent (< 24h):** Resume with cached data, skip GitHub fetch
+  - **Moderate (24-48h):** Ask user: resume cached or refetch from GitHub?
+  - **Stale (> 48h):** Proceed to refetch from GitHub
 
-The sub-agent operates in its own context window with focused tools (Read, Bash, Write, Glob, Grep) and will present an informed starting point for the work.
+If resuming with cached data, skip to Step 4 (delegate to start sub-agent with resume=true).
+{{/if}}
+
+### Step 2: Fetch Issue from GitHub
+
+{{#if args}}
+**Call github-gatekeeper to fetch issue:**
+
+Use Task tool with sub-agent `github-gatekeeper`:
+- **Operation:** "Fetch Issue"
+- **Input:** Issue number {{args}}
+- **Returns:** issue_data (title, body, labels, state, url) or offline_mode indication
+
+**Handle result:**
+
+- **If GitHub available:** Store issue_data for sub-agent
+- **If offline mode:** Warn user, proceed with cached data if available, or fail gracefully
+
+Collect issue metadata: title, body, labels, state, url
+{{else}}
+No issue number provided - sub-agent will handle zero-issues discovery workflow.
+{{/if}}
+
+### Step 3: Delegate to Start Sub-Agent
+
+Use Task tool with sub-agent `start`:
+
+**Pass to sub-agent:**
+{{#if args}}
+- Issue number: {{args}}
+- Issue data: (title, body, labels, state, url from Step 2)
+- Resume mode: (true/false from Step 1)
+- Work file data: (if resuming with cached data)
+{{else}}
+- Zero-issues mode: true
+{{/if}}
+
+**Sub-agent will:**
+1. Load context (CLAUDE.md files, state, archive)
+2. {{#if args}}Present issue overview and suggest approach{{else}}Discover starter work and create issues{{/if}}
+3. Create work file `.claude/work/{issue-number}.md`
+4. Return: issue_number, issue_title, work_file_created
+
+### Step 4: Update State
+
+**Call state-gatekeeper to set active work:**
+
+Use Task tool with sub-agent `state-gatekeeper`:
+- **Operation:** "Set Active Work"
+- **Input:** issue_number, issue_title, started_timestamp (ISO 8601)
+- **Returns:** success status
+
+**State gatekeeper will:**
+- Update `.claude/state.md` with active work
+- Move previous work to Recent Work
+- Record start timestamp
+
+### Step 5: Present Starting Point
+
+Inform user that work has begun:
+- Issue is now active in state.md
+- Work file created
+- Ready to proceed
+
+**Workflow hint:**
+```
+💡 **Next steps:** As you work, use `/keep:save` to checkpoint progress and capture decisions. Run it at natural breakpoints (after implementing features, making key decisions, or every 30-45 min).
+```
+
+## Error Handling
+
+- **GitHub unavailable:** Continue in offline mode, skip sync operations
+- **State file corrupted:** state-gatekeeper handles recovery
+- **Work file exists:** Handle resume vs refetch based on freshness
+- **No issues found (zero-issues):** Guide user through issue creation
+
+## Architecture
+
+This command orchestrates three sub-agents:
+1. **state-gatekeeper** - Resume detection and state updates
+2. **github-gatekeeper** - Issue fetching with retry logic
+3. **start** - Context loading, work file creation, presentation
+
+Each operates in its own context window with focused tools.

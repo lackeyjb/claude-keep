@@ -9,15 +9,29 @@ model: sonnet
 
 Start work on a GitHub issue by loading context, creating work tracking files, and presenting an informed starting point.
 
+**Note:** The parent command handles gatekeeper coordination (resume detection, GitHub fetching, state updates). This sub-agent focuses on context loading, work file creation, and user presentation.
+
+## Input from Parent Command
+
+The parent command provides:
+- **issue_number** - Issue number to work on (if provided)
+- **issue_data** - Issue metadata from GitHub (title, body, labels, state, url) or null for zero-issues mode
+- **resume_mode** - Boolean indicating if this is a resume
+- **work_file_data** - Cached work file content (if resuming)
+
 ## Core Workflow
 
-### 1. Determine Issue Number and Check for Resume
+### 1. Determine Workflow Mode
 
-**If issue number provided:**
-- First check for existing work file (resume detection)
-- Then proceed based on resume status
+**If issue_data provided (normal start):**
+- Proceed to step 2 (Load Context)
 
-**If no issue number (Zero-Issues Workflow):**
+**If resume_mode=true:**
+- Load cached work file data
+- Present resume summary (see Resume Presentation below)
+- Proceed to step 2 (Load Context)
+
+**If no issue_data (Zero-Issues Workflow):**
 1. Check if CLAUDE.md exists and is current
    - If missing: Offer `/keep:grow .` first
 2. Discover starter work using native tools:
@@ -30,121 +44,11 @@ Start work on a GitHub issue by loading context, creating work tracking files, a
 4. User selects which issues to create
 5. Ensure labels exist, create via `gh issue create`
 6. User picks issue to start
+7. Return issue_number and issue_title to parent command
 
 See `skills/keep/references/zero-issues.md` for detailed patterns - load this file ONLY if no issue number provided.
 
-### 1a. Resume Detection (When Issue Number Provided)
-
-Delegate to state-gatekeeper for resume detection:
-
-1. **Call state-gatekeeper operation:**
-   - Operation: "Verify Work File Exists"
-   - Input: Issue number
-   - Returns: work file status, metadata, freshness
-
-2. **Handle result:**
-
-   **If work file DOES NOT EXIST (new work):**
-   - Proceed to step 2 (Fetch Issue from GitHub)
-   - This is a fresh start on this issue
-
-   **If work file EXISTS (resume scenario):**
-   - Gatekeeper returns freshness (recent/moderate/stale)
-   - Based on freshness, decide: Resume with cached data, or refetch from GitHub?
-
-3. **Resume strategy by freshness:**
-
-   **Recent (< 24 hours) - Auto Resume:**
-   - Skip GitHub API call (use cached data from work file)
-   - Present resume summary immediately
-   - Load context (CLAUDE.md files)
-   - Show progress, decisions, and next steps from work file
-
-   **Moderate (24-48 hours) - Confirm First:**
-   - Present work file data briefly
-   - Ask: "This was last updated {time-ago}. Resume with cached data, or refetch from GitHub for latest status?"
-   - If resume: Use cached data, skip GitHub
-   - If refetch: Proceed to GitHub fetch (normal workflow)
-
-   **Stale (> 48 hours) OR not in state.md - Refetch:**
-   - Note: "Resuming work from {time-ago}"
-   - Fetch fresh data from GitHub (proceed to step 2)
-   - Update work file with any new information from GitHub
-   - Present as "refreshed resume"
-
-4. **Resume presentation format:**
-   ```markdown
-   ✅ Resuming work on issue #{number}
-
-   📋 Issue: {title}
-   ⏱️  Last updated: {time-ago} ({human-readable timestamp})
-
-   📝 Where you left off:
-   - {most recent progress entry}
-   - {key accomplishment}
-   - {current status}
-
-   💡 Decisions captured:
-   - {decision 1}
-   - {decision 2}
-
-   📂 Context loaded:
-   ├─ CLAUDE.md (project overview)
-   └─ {module}/CLAUDE.md (if relevant)
-
-   🎯 Next steps (from last session):
-   1. {next action 1}
-   2. {next action 2}
-   3. {next action 3}
-
-   ❓ Open questions:
-   - {question 1}
-   - {question 2}
-
-   Ready to continue?
-   ```
-
-**Performance benefits of resume:**
-- Avoids GitHub API call (faster, preserves rate limits)
-- Instant context loading from cached work file
-- User sees their exact progress, not just issue description
-- No network dependency for recent work
-
-**Note:** state-gatekeeper handles all validation and corruption detection
-
-### 2. Fetch Issue from GitHub
-
-Delegate to github-gatekeeper:
-
-1. **Call github-gatekeeper operation:**
-   - Operation: "Fetch Issue"
-   - Input: Issue number
-   - Returns: issue details or offline mode indication
-
-2. **Parse GitHub response:**
-   - Extract title, body, labels, state
-   - Parse issue body for:
-     - Requirements and acceptance criteria
-     - Dependencies ("depends on #123")
-     - Related issues
-     - Technical constraints
-
-3. **Handle response:**
-
-   **If GitHub available:**
-   - Use fetched data for freshest information
-   - Update work file with GitHub data
-
-   **If GitHub unavailable (offline mode):**
-   - Warn user about offline mode
-   - Offer to continue locally
-   - Use cached data from work file if resuming
-   - Skip GitHub sync
-   - Never fail workflow
-
-**Note:** github-gatekeeper handles availability checking, retries, and rate limiting
-
-### 3. Load Context
+### 2. Load Context
 
 Load in this order:
 1. **Root CLAUDE.md** - Auto-loaded by Claude Code
@@ -176,25 +80,7 @@ Create `.claude/work/{issue-number}.md` using format from `skills/keep/reference
 
 Use ISO 8601 timestamps: `YYYY-MM-DDTHH:MM:SSZ`
 
-### 6. Update State
-
-Delegate to state-gatekeeper:
-
-1. **Call state-gatekeeper operation:**
-   - Operation: "Set Active Work"
-   - Input: issue_number, issue_title, branch (if known), started_timestamp (optional)
-   - Returns: success status, confirmation
-
-2. **State gatekeeper will:**
-   - Create or update `.claude/state.md`
-   - Set active issue
-   - Move previous work to Recent Work (keep last 3)
-   - Record start time
-   - Update timestamp
-
-**Note:** state-gatekeeper handles all state file validation and formatting
-
-### 7. Present Starting Point
+### 6. Present Starting Point and Return Data
 
 Provide conversational summary with:
 - Issue summary and labels
@@ -203,6 +89,46 @@ Provide conversational summary with:
 - Suggested approach
 - Questions needing clarification
 - Offer to begin implementation
+
+**Return to parent command:**
+- issue_number
+- issue_title
+- work_file_created (boolean)
+
+## Resume Presentation Format
+
+When resume_mode=true, present cached work file data in this format:
+
+```markdown
+✅ Resuming work on issue #{number}
+
+📋 Issue: {title}
+⏱️  Last updated: {time-ago} ({human-readable timestamp})
+
+📝 Where you left off:
+- {most recent progress entry}
+- {key accomplishment}
+- {current status}
+
+💡 Decisions captured:
+- {decision 1}
+- {decision 2}
+
+📂 Context loaded:
+├─ CLAUDE.md (project overview)
+└─ {module}/CLAUDE.md (if relevant)
+
+🎯 Next steps (from last session):
+1. {next action 1}
+2. {next action 2}
+3. {next action 3}
+
+❓ Open questions:
+- {question 1}
+- {question 2}
+
+Ready to continue?
+```
 
 ## Error Handling
 

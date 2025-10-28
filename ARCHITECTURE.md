@@ -2,6 +2,8 @@
 
 This document explains Keep's two-layer architecture: a **proactive skill layer** for recognition and suggestion, built on top of an **optimized execution layer** for minimal context usage.
 
+**Latest update (v1.3.0):** Commands now orchestrate gatekeeper sub-agents to eliminate subagent-to-subagent delegation issues while maintaining DRY principles. See [Migration Notes](#migration-notes) for details.
+
 ## Architectural Layers
 
 Keep has two distinct architectural layers:
@@ -79,27 +81,29 @@ Based on Claude Code's best practices for skills and sub-agents:
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ LAYER 2a: Slash Command (commands/start.md)                │
-│ - Minimal wrapper (~30 lines)                               │
-│ - Delegates to sub-agent via Task tool                      │
+│ - Workflow orchestrator (~135 lines)                        │
+│ - Coordinates gatekeepers and sub-agent                     │
+│ - Operates in main context window                           │
 └───────────────────────┬─────────────────────────────────────┘
                         │
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│ LAYER 2b: Sub-Agent (agents/start.md)                       │
-│ - Focused workflow instructions (~120 lines)                │
-│ - Tools: Read, Bash, Write, Glob, Grep                      │
-│ - Operates in own context window                            │
-│ - Loads references only if needed                           │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼ (only if needed)
-┌─────────────────────────────────────────────────────────────┐
-│ LAYER 2c: References (loaded on-demand)                     │
-│ - file-formats.md (only when creating files)                │
-│ - zero-issues.md (only when no issues exist)                │
-│ - troubleshooting.md (only when errors occur)               │
-│ - templates/*.md (only when posting to GitHub)              │
-└─────────────────────────────────────────────────────────────┘
+                        ├──────────────────────────────────────┐
+                        ▼                                      ▼
+┌─────────────────────────────────────────┐  ┌─────────────────────────────────┐
+│ Gatekeepers (via Task tool)             │  │ Sub-Agent (via Task tool)       │
+│ - state-gatekeeper (resume detection)   │  │ agents/start.md                 │
+│ - github-gatekeeper (fetch issue)       │  │ - Context loading (~100 lines)  │
+│ - state-gatekeeper (set active work)    │  │ - Work file creation            │
+│ Each in own context window              │  │ - Own context window            │
+└──────────────────────────────────────────┘  └─────────────────────────────────┘
+                        │                                      │
+                        └──────────────┬───────────────────────┘
+                                       ▼ (only if needed)
+                        ┌─────────────────────────────────────────────┐
+                        │ LAYER 2b: References (loaded on-demand)     │
+                        │ - file-formats.md (only when creating files)│
+                        │ - zero-issues.md (only when no issues exist)│
+                        │ - troubleshooting.md (only on errors)       │
+                        └─────────────────────────────────────────────┘
 ```
 
 **Key insight:** The skill layer makes Keep feel natural and proactive. Users don't need to remember commands - Claude recognizes moments and suggests them. The execution layer then handles the workflow efficiently with minimal context usage.
@@ -122,11 +126,11 @@ Each Keep command loads:
 - No pollution from other workflows
 - **Total: ~60-200 lines per command (65-80% reduction)**
 
-## Gatekeeper Sub-Agents (NEW)
+## Gatekeeper Sub-Agents
 
-Keep uses **gatekeeper sub-agents** to centralize common operations and eliminate duplication across workflows:
+Keep uses **gatekeeper sub-agents** to centralize common operations and eliminate duplication across workflows. **Commands orchestrate gatekeepers**, not main subagents, to avoid subagent-to-subagent delegation issues.
 
-### github-gatekeeper (334 lines)
+### github-gatekeeper (464 lines)
 **Purpose:** Centralized GitHub operations with availability checking, retry logic, and offline mode
 
 **Operations:**
@@ -136,15 +140,15 @@ Keep uses **gatekeeper sub-agents** to centralize common operations and eliminat
 - Sync progress and completion updates
 - Close issues with PR-aware logic
 
-**Used by:** start, save, done agents
+**Called by:** start, save, done **commands** (not agents)
 
 **Benefits:**
 - Consistent error handling and offline degradation
 - Centralized rate limit awareness
 - Smart PR-aware closing logic
-- Eliminates ~50 lines of duplication
+- Eliminates ~50 lines of duplication per workflow
 
-### state-gatekeeper (287 lines)
+### state-gatekeeper (370 lines)
 **Purpose:** Centralized state.md and work file operations with validation and recovery
 
 **Operations:**
@@ -155,15 +159,15 @@ Keep uses **gatekeeper sub-agents** to centralize common operations and eliminat
 - Reconstruct state from work files
 - Verify work file integrity
 
-**Used by:** start, save, done agents
+**Called by:** start, save, done **commands** (not agents)
 
 **Benefits:**
 - Consistent state validation and corruption recovery
 - Centralized work file operations
 - Clear separation of concerns
-- Eliminates ~40 lines of duplication
+- Eliminates ~40 lines of duplication per workflow
 
-### claudemd-gatekeeper (286 lines)
+### claudemd-gatekeeper (306 lines)
 **Purpose:** Centralized CLAUDE.md proposal generation with integrated size validation and quality filtering
 
 **Operations:**
@@ -173,15 +177,15 @@ Keep uses **gatekeeper sub-agents** to centralize common operations and eliminat
 - Check if update needed
 - Integrate with quality-gatekeeper for high-value filtering
 
-**Used by:** save, grow agents
+**Called by:** save, grow, done **commands** (not agents)
 
 **Benefits:**
 - Unified size validation and quality assessment
 - Integrated approval workflow
 - Consistent CLAUDE.md management
-- Eliminates ~60 lines of duplication
+- Eliminates ~60 lines of duplication per workflow
 
-### quality-gatekeeper (152 lines)
+### quality-gatekeeper (233 lines)
 **Purpose:** Centralized quality assessment applying the 6-month test
 
 **Operations:**
@@ -191,68 +195,80 @@ Keep uses **gatekeeper sub-agents** to centralize common operations and eliminat
 - Check learning thresholds
 - Apply consistent 6-month test
 
-**Used by:** save (for learning capture), grow (for documentation value), claudemd-gatekeeper (for content filtering)
+**Called by:** save, grow **commands** (not agents), and claudemd-gatekeeper
 
 **Benefits:**
 - Consistent quality bar across all workflows
 - Centralized 6-month test application
 - Easy to tune quality criteria
-- Eliminates ~30 lines of duplication
+- Eliminates ~30 lines of duplication per workflow
 
-**Total duplication eliminated: ~180 lines**
+**Total duplication eliminated: ~180 lines per workflow**
+
+### Architecture Pattern: Command Orchestration
+
+**Key insight:** Commands orchestrate gatekeepers, then delegate simplified work to main subagents. This avoids subagent-to-subagent delegation (which doesn't work) while maintaining DRY principles.
+
+```
+Command (orchestrator)
+  ↓
+  ├─→ Gatekeeper (pre-checks)
+  ├─→ Main Subagent (core work)
+  └─→ Gatekeeper (post-processing)
+```
 
 ## Sub-Agent Breakdown
 
-### start (231 lines)
-**Purpose:** Start work on issue with resume detection
+### start (~100 lines, simplified)
+**Purpose:** Load context and create work files
 **Tools:** Read, Bash, Write, Glob, Grep
-**Delegates to:**
-- state-gatekeeper (verify work file, resume detection)
-- github-gatekeeper (fetch issue from GitHub)
-**Loads:**
-- `file-formats.md` - Only if creating new files
-- `zero-issues.md` - Only if no issues exist
-- `troubleshooting.md` - Only on errors
+**Focus:**
+- Context loading (CLAUDE.md files, state, archive)
+- Work file creation
+- Resume presentation
+- Zero-issues discovery workflow
+**Receives from command:**
+- Issue data (fetched by command via github-gatekeeper)
+- Resume status (determined by command via state-gatekeeper)
 
-**Context savings:** Focused on orchestration, gatekeepers handle complex operations
+**Context savings:** 40-60% smaller - no gatekeeper delegation logic
 
-### save (250 lines)
-**Purpose:** Capture progress and learnings
+### save (~80 lines, simplified)
+**Purpose:** Extract progress and learnings from conversation
 **Tools:** Read, Edit, Bash
-**Delegates to:**
-- state-gatekeeper (update progress, verify active work)
-- quality-gatekeeper (filter learnings, check threshold)
-- claudemd-gatekeeper (generate and apply proposals)
-- github-gatekeeper (sync progress to GitHub)
-**Loads:**
-- `templates/github-progress.md` - Only when syncing to GitHub
-- Only references explicitly needed
+**Focus:**
+- Review recent conversation
+- Extract progress items, decisions, learnings
+- Update work file
+**Returns to command:**
+- Structured data for state updates, quality checks, CLAUDE.md proposals
 
-**Context savings:** Gatekeepers handle learning capture, quality assessment, and GitHub operations
+**Context savings:** 40-60% smaller - command handles all gatekeeper orchestration
 
-### done (324 lines)
-**Purpose:** Complete work and recommend next
+### done (~120 lines, simplified)
+**Purpose:** Generate summary, detect PR, archive, recommend next
 **Tools:** Read, Bash, Edit, Grep
-**Delegates to:**
-- state-gatekeeper (clear active work)
-- claudemd-gatekeeper (check for CLAUDE.md updates)
-- github-gatekeeper (post completion, close issue)
-**Loads:**
-- `templates/github-completion.md` - When posting to GitHub
-- `troubleshooting.md` - Only on errors
+**Focus:**
+- Generate comprehensive summary
+- Detect associated PR
+- Archive work file
+- Score and recommend next issues
+**Returns to command:**
+- Summary data for GitHub sync and context updates
 
-**Context savings:** Gatekeepers handle state, proposals, and GitHub operations
+**Context savings:** 40-60% smaller - command handles state, CLAUDE.md, and GitHub operations
 
-### grow (375 lines)
-**Purpose:** Create/update CLAUDE.md files
+### grow (~150 lines, simplified)
+**Purpose:** Analyze directory and identify patterns
 **Tools:** Read, Glob, Grep, Write, Edit
-**Delegates to:**
-- quality-gatekeeper (assess documentation value)
-- claudemd-gatekeeper (generate and apply proposals)
-**Loads:**
-- `file-formats.md` - When generating CLAUDE.md proposals
+**Focus:**
+- Directory structure analysis
+- Pattern detection
+- Framework and dependency identification
+**Returns to command:**
+- Analysis data for quality assessment and proposal generation
 
-**Context savings:** Gatekeepers handle assessment, proposal generation, and size validation
+**Context savings:** 40-60% smaller - command handles quality assessment and CLAUDE.md proposals
 
 ## Main Skill.md Role (Layer 1)
 
@@ -411,36 +427,36 @@ file-formats.md:            611 lines (when generating CLAUDE.md)
 
 ```
 .claude/
-├── agents/                  # Workflow sub-agents & shared patterns
-│   ├── start.md            # Start workflow (231 lines) - delegates to gatekeepers
-│   ├── save.md             # Save workflow (250 lines) - delegates to gatekeepers
-│   ├── done.md             # Done workflow (324 lines) - delegates to gatekeepers
-│   ├── grow.md             # Grow workflow (375 lines) - delegates to gatekeepers
+├── agents/                  # Simplified workflow sub-agents & gatekeepers
+│   ├── start.md            # Context loading & work file creation (~100 lines, simplified)
+│   ├── save.md             # Progress/learning extraction (~80 lines, simplified)
+│   ├── done.md             # Summary, PR detection, recommendations (~120 lines, simplified)
+│   ├── grow.md             # Directory analysis & pattern detection (~150 lines, simplified)
 │   └── shared/             # Gatekeeper sub-agents & shared patterns
-│       ├── github-gatekeeper.md     # GitHub operations (334 lines)
-│       ├── state-gatekeeper.md      # State & work file management (287 lines)
-│       ├── claudemd-gatekeeper.md   # CLAUDE.md proposals & size validation (286 lines)
-│       ├── quality-gatekeeper.md    # Quality assessment & 6-month test (152 lines)
-│       ├── error-handling.md        # Error recovery patterns (83 lines)
-│       ├── principles.md            # Core execution principles (123 lines)
-│       ├── quality-filters.md       # Quality guidance reference (150 lines)
-│       └── size-validation.md       # Size limits reference (146 lines)
-├── commands/               # UPDATED: Thin wrappers with pre-flight checks
-│   ├── start.md            # Pre-flight checks + delegation (49 lines)
-│   ├── save.md             # Pre-flight checks + delegation (53 lines)
-│   ├── done.md             # Pre-flight checks + delegation (58 lines)
-│   └── grow.md             # Pre-flight checks + delegation (57 lines)
+│       ├── github-gatekeeper.md     # GitHub operations (464 lines)
+│       ├── state-gatekeeper.md      # State & work file management (370 lines)
+│       ├── claudemd-gatekeeper.md   # CLAUDE.md proposals & size validation (306 lines)
+│       ├── quality-gatekeeper.md    # Quality assessment & 6-month test (233 lines)
+│       ├── error-handling.md        # Error recovery patterns (shared)
+│       ├── principles.md            # Core execution principles (shared)
+│       ├── quality-filters.md       # Quality guidance reference (shared)
+│       └── size-validation.md       # Size limits reference (shared)
+├── commands/               # Workflow orchestrators (coordinate gatekeepers + agents)
+│   ├── start.md            # Orchestrates state/github gatekeepers + start agent (~135 lines)
+│   ├── save.md             # Orchestrates all gatekeepers + save agent (~185 lines)
+│   ├── done.md             # Orchestrates state/claudemd/github gatekeepers + done agent (~224 lines)
+│   └── grow.md             # Orchestrates quality/claudemd gatekeepers + grow agent (~163 lines)
 ├── skills/keep/
-│   ├── SKILL.md            # REDUCED: 222 lines (was 341)
-│   ├── references/         # REORGANIZED: More granular
+│   ├── SKILL.md            # Proactive recognition engine (284 lines)
+│   ├── references/         # On-demand reference files
 │   │   ├── file-formats.md        # Format specs (611 lines)
 │   │   ├── zero-issues.md         # Discovery (509 lines)
 │   │   ├── troubleshooting.md     # Errors (528 lines)
 │   │   ├── workflows.md           # Examples (969 lines)
-│   │   └── templates/             # NEW: Granular templates
+│   │   └── templates/             # Granular templates
 │   │       ├── github-progress.md     # Progress (60 lines)
 │   │       └── github-completion.md   # Completion (90 lines)
-│   └── scripts/            # UNCHANGED: Execute without loading
+│   └── scripts/            # Execute without loading
 │       ├── score_issues.py
 │       └── github_sync.py
 ├── state.md                # Current session state
@@ -450,15 +466,21 @@ file-formats.md:            611 lines (when generating CLAUDE.md)
 
 ## Migration Notes
 
+### Version 1.3.0: Command Orchestration Pattern
+
+**Architectural change:** Commands now orchestrate gatekeepers (instead of subagents delegating to gatekeepers). This eliminates subagent-to-subagent delegation issues.
+
+**What changed:**
+- Commands are now orchestrators (~135-224 lines), not thin wrappers
+- Main subagents simplified by 40-60% (no gatekeeper delegation)
+- Gatekeepers called directly by commands via Task tool
+- Clear separation: Commands orchestrate → Gatekeepers specialize → Subagents execute
+
 **No user-facing changes:**
 - Commands work exactly the same
 - Same syntax, same behavior
 - Same file formats
-
-**Internal changes:**
-- Commands now delegate to sub-agents
-- Main skill is now minimal
-- References more granular
+- Same workflows
 
 **Backward compatibility:**
 - All existing work files compatible
@@ -578,6 +600,24 @@ Potential further optimizations:
 - **Best balance** of performance and maintainability
 
 ## Design Decisions
+
+### Why Command Orchestration vs Subagent Delegation?
+
+**Problem:** Subagents cannot delegate to other subagents (architectural limitation)
+
+**Considered:**
+1. Inline gatekeeper logic into each subagent (duplication)
+2. Have subagents call gatekeepers directly (doesn't work)
+3. Commands orchestrate gatekeepers (chosen)
+
+**Chose command orchestration because:**
+1. **Eliminates delegation issue** - Commands can delegate to any subagent
+2. **Maintains DRY** - Gatekeepers stay centralized (~180 lines not duplicated)
+3. **Clear separation** - Commands orchestrate, subagents execute, gatekeepers specialize
+4. **Context control** - Commands call gatekeepers only when needed
+5. **Simpler subagents** - 40-60% smaller, focused on core work
+
+**Trade-off:** Commands are larger (~135-224 lines vs ~50 lines), but total architecture is cleaner and more maintainable.
 
 ### Why Sub-Agents vs Direct Skill Loading?
 
