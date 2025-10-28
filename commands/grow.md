@@ -21,6 +21,22 @@ Target directory: First non-flag argument (or current directory if none)
 No directory specified. The grow sub-agent will default to current working directory or project root.
 {{/if}}
 
+## Pre-Flight Checks
+
+Before delegating to the grow sub-agent:
+
+1. **Verify target directory exists**
+   - Extract directory from arguments (first non-flag argument)
+   - If directory doesn't exist: inform user, suggest valid directory
+
+2. **Verify it's a valid project directory**
+   - Check for code files or subdirectories
+   - Warn if directory appears empty
+
+3. **Check if CLAUDE.md already exists**
+   - If exists and --update flag not provided: warn user they may want to use --update
+   - If exists and over size limits: suggest using --condense flag
+
 ## Delegation
 
 Use the Task tool to invoke the grow sub-agent:

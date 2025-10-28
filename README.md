@@ -378,18 +378,27 @@ Optional but powerful:
 
 ### Optimized Context Usage
 
-Keep uses a sub-agent architecture for minimal context consumption:
+Keep uses a **gatekeeper sub-agent architecture** for minimal context consumption:
+- **Gatekeeper sub-agents** centralize common operations (GitHub, state, CLAUDE.md, quality)
+- **~180 lines of duplication eliminated** across workflows
 - **65-80% reduction** in context per command vs traditional approaches
 - Each workflow (start/save/done/grow) operates in its own context window
 - References loaded on-demand only when needed
 - Main skill reduced to 222 lines (from 341)
 - No context pollution between workflows
 
+**Gatekeeper sub-agents handle:**
+- `github-gatekeeper` - GitHub operations with offline support
+- `state-gatekeeper` - State and work file management
+- `claudemd-gatekeeper` - CLAUDE.md proposals and size validation
+- `quality-gatekeeper` - Quality assessment and 6-month test
+
 This means:
 - Faster command execution
 - More room for your actual work
 - Reduced token usage
 - Better performance on long sessions
+- Consistent error handling and offline support
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for technical implementation details.
 

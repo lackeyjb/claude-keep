@@ -122,43 +122,137 @@ Each Keep command loads:
 - No pollution from other workflows
 - **Total: ~60-200 lines per command (65-80% reduction)**
 
+## Gatekeeper Sub-Agents (NEW)
+
+Keep uses **gatekeeper sub-agents** to centralize common operations and eliminate duplication across workflows:
+
+### github-gatekeeper (334 lines)
+**Purpose:** Centralized GitHub operations with availability checking, retry logic, and offline mode
+
+**Operations:**
+- Check GitHub availability (CLI, network, rate limits)
+- Fetch issues (with error handling and caching)
+- Post comments to issues (with retry logic)
+- Sync progress and completion updates
+- Close issues with PR-aware logic
+
+**Used by:** start, save, done agents
+
+**Benefits:**
+- Consistent error handling and offline degradation
+- Centralized rate limit awareness
+- Smart PR-aware closing logic
+- Eliminates ~50 lines of duplication
+
+### state-gatekeeper (287 lines)
+**Purpose:** Centralized state.md and work file operations with validation and recovery
+
+**Operations:**
+- Get active work status
+- Set active work (with previous work archival)
+- Update progress and next steps
+- Clear active work (completion)
+- Reconstruct state from work files
+- Verify work file integrity
+
+**Used by:** start, save, done agents
+
+**Benefits:**
+- Consistent state validation and corruption recovery
+- Centralized work file operations
+- Clear separation of concerns
+- Eliminates ~40 lines of duplication
+
+### claudemd-gatekeeper (286 lines)
+**Purpose:** Centralized CLAUDE.md proposal generation with integrated size validation and quality filtering
+
+**Operations:**
+- Generate proposals with size validation
+- Present proposals for user approval
+- Apply approved changes
+- Check if update needed
+- Integrate with quality-gatekeeper for high-value filtering
+
+**Used by:** save, grow agents
+
+**Benefits:**
+- Unified size validation and quality assessment
+- Integrated approval workflow
+- Consistent CLAUDE.md management
+- Eliminates ~60 lines of duplication
+
+### quality-gatekeeper (152 lines)
+**Purpose:** Centralized quality assessment applying the 6-month test
+
+**Operations:**
+- Assess individual learnings
+- Filter batches of learnings
+- Assess documentation value
+- Check learning thresholds
+- Apply consistent 6-month test
+
+**Used by:** save (for learning capture), grow (for documentation value), claudemd-gatekeeper (for content filtering)
+
+**Benefits:**
+- Consistent quality bar across all workflows
+- Centralized 6-month test application
+- Easy to tune quality criteria
+- Eliminates ~30 lines of duplication
+
+**Total duplication eliminated: ~180 lines**
+
 ## Sub-Agent Breakdown
 
-### start (~120 lines)
-**Purpose:** Start work on issue
+### start (231 lines)
+**Purpose:** Start work on issue with resume detection
 **Tools:** Read, Bash, Write, Glob, Grep
+**Delegates to:**
+- state-gatekeeper (verify work file, resume detection)
+- github-gatekeeper (fetch issue from GitHub)
 **Loads:**
 - `file-formats.md` - Only if creating new files
 - `zero-issues.md` - Only if no issues exist
 - `troubleshooting.md` - Only on errors
 
-**Context savings:** Doesn't load save/done/grow logic
+**Context savings:** Focused on orchestration, gatekeepers handle complex operations
 
-### save (~100 lines)
+### save (250 lines)
 **Purpose:** Capture progress and learnings
 **Tools:** Read, Edit, Bash
+**Delegates to:**
+- state-gatekeeper (update progress, verify active work)
+- quality-gatekeeper (filter learnings, check threshold)
+- claudemd-gatekeeper (generate and apply proposals)
+- github-gatekeeper (sync progress to GitHub)
 **Loads:**
 - `templates/github-progress.md` - Only when syncing to GitHub
-- `file-formats.md` - Only for CLAUDE.md proposals
+- Only references explicitly needed
 
-**Context savings:** Doesn't load start/done/grow logic
+**Context savings:** Gatekeepers handle learning capture, quality assessment, and GitHub operations
 
-### done (~140 lines)
+### done (324 lines)
 **Purpose:** Complete work and recommend next
 **Tools:** Read, Bash, Edit, Grep
+**Delegates to:**
+- state-gatekeeper (clear active work)
+- claudemd-gatekeeper (check for CLAUDE.md updates)
+- github-gatekeeper (post completion, close issue)
 **Loads:**
 - `templates/github-completion.md` - When posting to GitHub
 - `troubleshooting.md` - Only on errors
 
-**Context savings:** Doesn't load start/save/grow logic, executes scoring script without loading code
+**Context savings:** Gatekeepers handle state, proposals, and GitHub operations
 
-### grow (~120 lines)
+### grow (375 lines)
 **Purpose:** Create/update CLAUDE.md files
 **Tools:** Read, Glob, Grep, Write, Edit
+**Delegates to:**
+- quality-gatekeeper (assess documentation value)
+- claudemd-gatekeeper (generate and apply proposals)
 **Loads:**
 - `file-formats.md` - When generating CLAUDE.md proposals
 
-**Context savings:** Doesn't load any workflow logic
+**Context savings:** Gatekeepers handle assessment, proposal generation, and size validation
 
 ## Main Skill.md Role (Layer 1)
 
@@ -318,20 +412,24 @@ file-formats.md:            611 lines (when generating CLAUDE.md)
 ```
 .claude/
 ├── agents/                  # Workflow sub-agents & shared patterns
-│   ├── start.md            # Start workflow (223 lines)
-│   ├── save.md             # Save workflow (209 lines)
-│   ├── done.md             # Done workflow (290 lines)
-│   ├── grow.md             # Grow workflow (354 lines)
-│   └── shared/             # Shared patterns (error handling, principles, etc.)
+│   ├── start.md            # Start workflow (231 lines) - delegates to gatekeepers
+│   ├── save.md             # Save workflow (250 lines) - delegates to gatekeepers
+│   ├── done.md             # Done workflow (324 lines) - delegates to gatekeepers
+│   ├── grow.md             # Grow workflow (375 lines) - delegates to gatekeepers
+│   └── shared/             # Gatekeeper sub-agents & shared patterns
+│       ├── github-gatekeeper.md     # GitHub operations (334 lines)
+│       ├── state-gatekeeper.md      # State & work file management (287 lines)
+│       ├── claudemd-gatekeeper.md   # CLAUDE.md proposals & size validation (286 lines)
+│       ├── quality-gatekeeper.md    # Quality assessment & 6-month test (152 lines)
 │       ├── error-handling.md        # Error recovery patterns (83 lines)
 │       ├── principles.md            # Core execution principles (123 lines)
-│       ├── quality-filters.md       # Quality assessment & 6-month test (150 lines)
-│       └── size-validation.md       # CLAUDE.md size enforcement (145 lines)
-├── commands/               # UPDATED: Thin wrappers
-│   ├── start.md            # Delegates to sub-agent (30 lines)
-│   ├── save.md             # Delegates to sub-agent (30 lines)
-│   ├── done.md             # Delegates to sub-agent (30 lines)
-│   └── grow.md             # Delegates to sub-agent (30 lines)
+│       ├── quality-filters.md       # Quality guidance reference (150 lines)
+│       └── size-validation.md       # Size limits reference (146 lines)
+├── commands/               # UPDATED: Thin wrappers with pre-flight checks
+│   ├── start.md            # Pre-flight checks + delegation (49 lines)
+│   ├── save.md             # Pre-flight checks + delegation (53 lines)
+│   ├── done.md             # Pre-flight checks + delegation (58 lines)
+│   └── grow.md             # Pre-flight checks + delegation (57 lines)
 ├── skills/keep/
 │   ├── SKILL.md            # REDUCED: 222 lines (was 341)
 │   ├── references/         # REORGANIZED: More granular

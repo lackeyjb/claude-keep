@@ -35,31 +35,24 @@ See `skills/keep/references/zero-issues.md` for detailed patterns - load this fi
 
 ### 1a. Resume Detection (When Issue Number Provided)
 
-Before fetching from GitHub, check if this is resuming existing work:
+Delegate to state-gatekeeper for resume detection:
 
-**Check for existing work file:**
-```bash
-test -f .claude/work/{issue-number}.md && echo "EXISTS" || echo "NEW"
-```
+1. **Call state-gatekeeper operation:**
+   - Operation: "Verify Work File Exists"
+   - Input: Issue number
+   - Returns: work file status, metadata, freshness
 
-**If work file EXISTS (resume scenario):**
+2. **Handle result:**
 
-1. **Read work file metadata:**
-   - Check "Last Updated" timestamp from Progress Log section
-   - Read current progress, decisions, and next steps
-   - Extract issue title and description from work file
+   **If work file DOES NOT EXIST (new work):**
+   - Proceed to step 2 (Fetch Issue from GitHub)
+   - This is a fresh start on this issue
 
-2. **Read state.md to confirm active status:**
-   ```bash
-   grep "Current Issue: #{issue-number}" .claude/state.md
-   ```
+   **If work file EXISTS (resume scenario):**
+   - Gatekeeper returns freshness (recent/moderate/stale)
+   - Based on freshness, decide: Resume with cached data, or refetch from GitHub?
 
-3. **Calculate freshness:**
-   - Parse last "Progress Log" timestamp
-   - Calculate hours since last update
-   - Categorize: Recent (< 24h), Moderate (24-48h), Stale (> 48h)
-
-4. **Resume strategy by freshness:**
+3. **Resume strategy by freshness:**
 
    **Recent (< 24 hours) - Auto Resume:**
    - Skip GitHub API call (use cached data from work file)
@@ -79,7 +72,7 @@ test -f .claude/work/{issue-number}.md && echo "EXISTS" || echo "NEW"
    - Update work file with any new information from GitHub
    - Present as "refreshed resume"
 
-5. **Resume presentation format:**
+4. **Resume presentation format:**
    ```markdown
    ✅ Resuming work on issue #{number}
 
@@ -111,38 +104,45 @@ test -f .claude/work/{issue-number}.md && echo "EXISTS" || echo "NEW"
    Ready to continue?
    ```
 
-**If work file DOES NOT EXIST (new work):**
-- Proceed to step 2 (Fetch Issue from GitHub)
-- This is a fresh start on this issue
-
 **Performance benefits of resume:**
 - Avoids GitHub API call (faster, preserves rate limits)
 - Instant context loading from cached work file
 - User sees their exact progress, not just issue description
 - No network dependency for recent work
 
-**Validation of cached data:**
-- Work file must have valid timestamp format
-- Work file must contain issue number matching requested
-- If work file corrupted: warn user, offer to fetch fresh from GitHub
+**Note:** state-gatekeeper handles all validation and corruption detection
 
 ### 2. Fetch Issue from GitHub
 
-```bash
-gh issue view {number} --json title,body,labels,state
-```
+Delegate to github-gatekeeper:
 
-Parse issue body for:
-- Requirements and acceptance criteria
-- Dependencies ("depends on #123")
-- Related issues
-- Technical constraints
+1. **Call github-gatekeeper operation:**
+   - Operation: "Fetch Issue"
+   - Input: Issue number
+   - Returns: issue details or offline mode indication
 
-**If GitHub unavailable:**
-- Warn user about offline mode
-- Offer to continue locally
-- Skip GitHub sync
-- Never fail workflow
+2. **Parse GitHub response:**
+   - Extract title, body, labels, state
+   - Parse issue body for:
+     - Requirements and acceptance criteria
+     - Dependencies ("depends on #123")
+     - Related issues
+     - Technical constraints
+
+3. **Handle response:**
+
+   **If GitHub available:**
+   - Use fetched data for freshest information
+   - Update work file with GitHub data
+
+   **If GitHub unavailable (offline mode):**
+   - Warn user about offline mode
+   - Offer to continue locally
+   - Use cached data from work file if resuming
+   - Skip GitHub sync
+   - Never fail workflow
+
+**Note:** github-gatekeeper handles availability checking, retries, and rate limiting
 
 ### 3. Load Context
 
@@ -178,13 +178,21 @@ Use ISO 8601 timestamps: `YYYY-MM-DDTHH:MM:SSZ`
 
 ### 6. Update State
 
-Update or create `.claude/state.md`:
-- Set active issue: `#{number} - {title}`
-- Record start time
-- Clear previous active work (move to Recent Work)
-- Note branch if known
+Delegate to state-gatekeeper:
 
-See `skills/keep/references/file-formats.md` for state.md format.
+1. **Call state-gatekeeper operation:**
+   - Operation: "Set Active Work"
+   - Input: issue_number, issue_title, branch (if known), started_timestamp (optional)
+   - Returns: success status, confirmation
+
+2. **State gatekeeper will:**
+   - Create or update `.claude/state.md`
+   - Set active issue
+   - Move previous work to Recent Work (keep last 3)
+   - Record start time
+   - Update timestamp
+
+**Note:** state-gatekeeper handles all state file validation and formatting
 
 ### 7. Present Starting Point
 

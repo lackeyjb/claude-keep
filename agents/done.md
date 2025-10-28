@@ -13,12 +13,25 @@ Complete work on current issue, generate comprehensive summary, sync to GitHub w
 
 ### 1. Verify Active Work
 
-Check `.claude/state.md` for active issue.
+Delegate to state-gatekeeper:
 
-**If no active work:**
-- Check `.claude/work/` for files
-- If found but not in state: Ask which to complete
-- If none: Inform user - nothing to complete
+1. **Call state-gatekeeper operation:**
+   - Operation: "Get Active Work"
+   - Input: None
+   - Returns: active work status, issue number, title, metadata
+
+2. **Handle result:**
+
+   **If active work exists:**
+   - Proceed with done workflow
+   - Use returned issue number and metadata
+
+   **If no active work:**
+   - Gatekeeper will check `.claude/work/` for any files
+   - If files found: Ask which to complete
+   - If none: Inform user - nothing to complete
+
+**Note:** state-gatekeeper handles all verification and file discovery
 
 ### 2. Read Complete Work File
 
@@ -60,22 +73,29 @@ Aggregate work into meaningful summary focusing on:
 
 ### 4. Check for Context Updates
 
-Review all learnings and decisions:
-- Which CLAUDE.md files should be updated?
-- Generate concrete proposals
-- Prepare diffs for review
+Delegate to claudemd-gatekeeper:
 
-**Present each proposal:**
-- Show complete change
-- Explain benefit
-- Offer: yes / edit / later / no
+1. **Call claudemd-gatekeeper operation for each affected directory:**
+   - Operation: "Check if Update Needed"
+   - Input: directory_path, work_file_data, current_CLAUDE_md (if exists)
+   - Returns: recommendation (create/update/wait), reasoning
 
-**If approved:**
-- Update CLAUDE.md files
-- Keep concise (<200 lines)
-- Confirm updates
+2. **For each approved update:**
+   - Call claudemd-gatekeeper: "Generate Proposal"
+   - Input: target_directory, proposed_content, operation_type
+   - Returns: proposal with size info and diff
 
-See `skills/keep/references/file-formats.md` for CLAUDE.md format.
+3. **Present proposal:**
+   - Show complete change
+   - Explain benefit
+   - Offer: yes / edit / later / no
+
+4. **If approved:**
+   - Call claudemd-gatekeeper: "Apply Proposal"
+   - Verify successful write
+   - Confirm within size limits
+
+**Note:** claudemd-gatekeeper handles all size validation and formatting
 
 ### 5. Detect Associated Pull Request
 
@@ -100,7 +120,9 @@ If PR exists, update work file with PR URL before archiving.
 
 ### 6. Sync to GitHub
 
-**Generate completion summary** using template from `skills/keep/references/templates/github-completion.md` (load when needed):
+Delegate to github-gatekeeper:
+
+1. **Generate completion summary** using template:
 
 ```markdown
 ## ✅ Work Complete - {date} {time}
@@ -127,45 +149,58 @@ If PR exists, update work file with PR URL before archiving.
 {follow-up if any}
 ```
 
-**Post to GitHub:**
-```bash
-gh issue comment {number} --body "{summary}"
-```
+2. **Call github-gatekeeper operation:**
+   - Operation: "Sync Progress Update"
+   - Input: issue_number, update_content, update_type: "completion"
+   - Returns: success status or queued status
 
-Record comment URL when posted.
+3. **Gatekeeper will:**
+   - Check GitHub availability
+   - Post comment to issue with retry logic
+   - Handle offline mode (queue for later)
+   - Return comment URL (if successful) or queue confirmation (if offline)
+
+4. **Record result:**
+   - If posted: Record comment URL in work file
+   - If queued: Note in work file that sync is pending
+
+**Note:** github-gatekeeper handles availability checking, retries, and formatting
 
 ### 7. Smart Issue Closing (PR-Aware)
 
-**Decision logic based on PR state:**
+Delegate to github-gatekeeper:
 
-**If PR merged:**
-- Check issue status: `gh issue view {number} --json state`
-- If already closed: Note "Issue auto-closed via PR #{pr_number}"
-- If still open: GitHub auto-close may be delayed, note this
-- **Don't ask user** - respect GitHub's auto-close behavior
+1. **Call github-gatekeeper operation:**
+   - Operation: "Close Issue"
+   - Input: issue_number, pr_state (merged/open/closed/not_found), pr_number (if exists)
+   - Returns: closure recommendation, user confirmation needed status
 
-**If PR open:**
-- **Don't close issue**
-- Inform user: "Issue will auto-close when PR #{pr_number} merges"
-- Continue to archiving
+2. **Decision logic based on PR state:**
 
-**If PR closed (unmerged):**
-- Ask user: "PR #{pr_number} was closed without merging. Close issue #{ issue_number}? [yes/no]"
-- Respect user choice
+   **If PR merged:**
+   - Gatekeeper checks issue status
+   - If already closed: Note "Issue auto-closed via PR #{pr_number}"
+   - If still open: GitHub auto-close may be delayed, note this
+   - **Don't ask user** - respect GitHub's auto-close behavior
 
-**If no PR:**
-- Ask user: "Close issue #{issue_number}? [yes/no]"
-- Standard close confirmation
+   **If PR open:**
+   - **Don't close issue**
+   - Inform user: "Issue will auto-close when PR #{pr_number} merges"
+   - Continue to archiving
 
-**If user confirms closing:**
-```bash
-gh issue close {number}
-```
+   **If PR closed (unmerged):**
+   - Ask user: "PR #{pr_number} was closed without merging. Close issue #{issue_number}? [yes/no]"
+   - Respect user choice
 
-**If GitHub unavailable:**
-- Note sync needed
-- Archive locally
-- Continue workflow
+   **If no PR:**
+   - Ask user: "Close issue #{issue_number}? [yes/no]"
+   - Standard close confirmation
+
+3. **If user confirms closing:**
+   - Gatekeeper closes issue with retry logic
+   - Handles offline mode gracefully
+
+**Note:** github-gatekeeper handles all GitHub operations and PR-aware closing logic
 
 ### 8. Archive Work File
 
@@ -183,23 +218,22 @@ Ensure PR information is preserved in archived file.
 
 ### 9. Update State
 
-Update `.claude/state.md`:
+Delegate to state-gatekeeper:
 
-**Clear Active Work section:**
-- Remove current issue
+1. **Call state-gatekeeper operation:**
+   - Operation: "Clear Active Work"
+   - Input: completion_reason (optional)
+   - Returns: success status, archived issue info
 
-**Add to Recent Work:**
-```markdown
-**Previous Issue:** #{number} - {title} (Completed {YYYY-MM-DD})
-```
-Keep last 3 issues.
+2. **State gatekeeper will:**
+   - Clear Active Work section
+   - Move completed issue to Recent Work (keep last 3)
+   - Add completion date
+   - Update Context section
+   - Update Last Updated timestamp
+   - Validate file format
 
-**Update Context:**
-- Note hot directories (where work was done)
-- Update focus areas
-- Clear blockers if resolved
-
-**Update Last Updated timestamp**
+**Note:** state-gatekeeper handles all state file operations and validation
 
 ### 10. Recommend Next Work
 

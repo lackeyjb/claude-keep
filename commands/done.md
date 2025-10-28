@@ -20,6 +20,22 @@ Supported flags:
 - `--no-sync` - Skip GitHub sync (local only)
 - `--no-recommend` - Skip next work recommendations
 
+## Pre-Flight Checks
+
+Before delegating to the done sub-agent:
+
+1. **Verify active work exists**
+   - Check `.claude/state.md` for active issue
+   - If no active work: inform user, suggest `/keep:start` first
+
+2. **Verify work file exists**
+   - Check `.claude/work/{issue}.md`
+   - If missing: inform user, suggest `/keep:start` to create it
+
+3. **Check for GitHub connectivity** (warning only)
+   - If GitHub likely unavailable: warn that sync will be queued
+   - Workflow will continue with local-only completion
+
 ## Delegation
 
 Use the Task tool to invoke the done sub-agent:

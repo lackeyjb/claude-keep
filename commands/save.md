@@ -18,6 +18,21 @@ Supported flags:
 - `--sync` - Force sync to GitHub
 - `--local` - Skip GitHub sync
 
+## Pre-Flight Checks
+
+Before delegating to the save sub-agent:
+
+1. **Verify active work exists**
+   - Check `.claude/state.md` for active issue
+   - If no active work: inform user, suggest `/keep:start` first
+
+2. **Verify work file exists**
+   - Check `.claude/work/{issue}.md`
+   - If missing but state says active: offer to recover from state
+
+3. **Check for content to save**
+   - If very new session: note that there may be minimal content to save
+
 ## Delegation
 
 Use the Task tool to invoke the save sub-agent:

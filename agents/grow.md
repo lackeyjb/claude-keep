@@ -76,37 +76,46 @@ Identify:
 
 ### 3. Assess Value of Documentation
 
-Ask these questions:
+Delegate to quality-gatekeeper:
 
-**Is this a cohesive module?**
-- Does directory have clear boundaries?
-- Does it serve a specific purpose?
-- Or is it just a grab bag of utilities?
+1. **Call quality-gatekeeper operation:**
+   - Operation: "Assess Documentation Value"
+   - Input: directory_path, directory_analysis, current_CLAUDE_md (if exists)
+   - Returns: recommendation (create/update/wait), reasoning, quality indicators
 
-**Are patterns clear enough?**
-- Can you identify consistent approaches?
-- Are there established conventions?
-- Or is code too heterogeneous?
+2. **Gatekeeper will assess:**
 
-**Would future work benefit?**
-- Will you work here again?
-- Is logic complex enough to need explanation?
-- Are there gotchas worth documenting?
+   **Is this a cohesive module?**
+   - Does directory have clear boundaries?
+   - Does it serve a specific purpose?
+   - Or is it just a grab bag of utilities?
 
-**Is it too early?**
-- Has module been worked on enough?
-- Have patterns emerged, or is it still forming?
-- Risk of premature documentation?
+   **Are patterns clear enough?**
+   - Can you identify consistent approaches?
+   - Are there established conventions?
+   - Or is code too heterogeneous?
 
-**Quality bar - "6-Month Test":**
+   **Would future work benefit?**
+   - Will you work here again?
+   - Is logic complex enough to need explanation?
+   - Are there gotchas worth documenting?
 
-See `agents/shared/quality-filters.md` for detailed assessment of whether documentation is valuable and passes quality bar.
+   **Is it too early?**
+   - Has module been worked on enough?
+   - Have patterns emerged, or is it still forming?
+   - Risk of premature documentation?
 
-**Decision:**
-- If valuable AND passes quality bar → Proceed to proposal
-- If too early → Suggest waiting
-- If not cohesive → Suggest different scope
-- If patterns are obvious → Skip documentation
+3. **Quality bar - "6-Month Test":**
+   - Gatekeeper applies 6-month test
+   - Verifies patterns pass quality bar
+   - Returns clear recommendation
+
+4. **Handle recommendation:**
+   - If "create" or "update" → Proceed to step 5 (Generate Proposal)
+   - If "wait" → Suggest returning after more work
+   - If unclear → Ask user for input
+
+**Note:** quality-gatekeeper handles all assessment and 6-month test logic
 
 ### 4. Check for Existing CLAUDE.md
 
@@ -126,103 +135,112 @@ cat {directory}/CLAUDE.md
 
 ### 5. Generate Proposal
 
-See `agents/shared/size-validation.md` for complete size budget and validation process.
+Delegate to claudemd-gatekeeper:
 
-**Quick reference:**
-- **Root CLAUDE.md:** 200 line MAXIMUM (target 120-150 lines)
-- **Module CLAUDE.md:** 150 line MAXIMUM (target 80-100 lines)
-- If updating and >80% capacity: identify content to prune first
-- Target net-zero or negative line growth
+1. **Call claudemd-gatekeeper operation:**
+   - Operation: "Generate Proposal"
+   - Input: target_directory, proposed_content, operation_type (create/update), analysis_context
+   - Returns: proposal with size info, quality assessment, diff
 
-Draft CLAUDE.md following format from `skills/keep/references/file-formats.md` (load for format details):
+2. **Draft content following format:**
 
-**For root CLAUDE.md (project root):**
-```markdown
-# Project: {Name}
+   **For root CLAUDE.md (project root):**
+   ```markdown
+   # Project: {Name}
 
-## Tech Stack
-- Runtime/language versions (concise: "Node 18, TypeScript 5")
-- Major frameworks only (not utilities)
-- Database and infrastructure
+   ## Tech Stack
+   - Runtime/language versions (concise: "Node 18, TypeScript 5")
+   - Major frameworks only (not utilities)
+   - Database and infrastructure
 
-## Architecture
-- High-level pattern (1 sentence)
-- Key architectural decisions (2-3 bullets max)
+   ## Architecture
+   - High-level pattern (1 sentence)
+   - Key architectural decisions (2-3 bullets max)
 
-## Project Structure
-- Directory organization (just main dirs)
-- Module responsibilities (1 line each)
+   ## Project Structure
+   - Directory organization (just main dirs)
+   - Module responsibilities (1 line each)
 
-## Development
-- Setup: 2-3 commands only
-- Key environment variables only
+   ## Development
+   - Setup: 2-3 commands only
+   - Key environment variables only
 
-## Conventions
-- Critical conventions only
-- Gotchas and non-obvious rules
+   ## Conventions
+   - Critical conventions only
+   - Gotchas and non-obvious rules
 
-## Recent Changes (Last 3-6 months)
-- Only significant architectural changes
-- Max 3-4 items
-```
+   ## Recent Changes (Last 3-6 months)
+   - Only significant architectural changes
+   - Max 3-4 items
+   ```
 
-**For module CLAUDE.md:**
-```markdown
-# {Module Name}
+   **For module CLAUDE.md:**
+   ```markdown
+   # {Module Name}
 
-## Purpose
-1-2 sentences on what and why
+   ## Purpose
+   1-2 sentences on what and why
 
-## Key Patterns
-- Non-obvious patterns only
-- Critical design decisions
-- 3-5 bullets max
+   ## Key Patterns
+   - Non-obvious patterns only
+   - Critical design decisions
+   - 3-5 bullets max
 
-## Recent Learnings
-- Gotchas that aren't obvious from code
-- Performance/security considerations
-- Common mistakes to avoid
-- 3-5 bullets max
+   ## Recent Learnings
+   - Gotchas that aren't obvious from code
+   - Performance/security considerations
+   - Common mistakes to avoid
+   - 3-5 bullets max
 
-## Dependencies (optional - only if non-obvious)
-- External dependencies worth noting
-- Internal coupling points
-```
+   ## Dependencies (optional - only if non-obvious)
+   - External dependencies worth noting
+   - Internal coupling points
+   ```
 
-**Ruthless Conciseness Guidelines:**
+3. **Gatekeeper will:**
+   - Determine if root (200 max) or module (150 max)
+   - Apply quality filter to proposed content
+   - Calculate size budget
+   - If >80% capacity: identify stale content to prune
+   - Generate complete diff showing adds/removes
+   - Return proposal ready for approval
 
-See `agents/shared/quality-filters.md` for detailed guidance on what to include vs exclude, plus examples of good vs bad content.
-
-**Key principles:**
+**Key principles (see quality-filters.md for details):**
 - Focus on non-obvious gotchas, not obvious patterns
 - Explain decisions and surprises, not structure
 - Use bullets, not paragraphs
 - 1 line per point when possible
 - Examples only when they clarify gotchas
 
-### 6. Present Proposal
+**Note:** claudemd-gatekeeper handles all size validation and diff generation
 
-See `agents/shared/size-validation.md` for complete presentation format and size warning guidelines.
+### 6. Present Proposal and Get Approval
 
-**Quick steps:**
-1. Count lines in proposal
-2. If updating: verify current + net change ≤ limits
-3. Show complete content with size information
-4. Present high-value insights captured
-5. Get user approval (yes / edit / later / no)
+Delegate to claudemd-gatekeeper:
+
+1. **Call claudemd-gatekeeper operation:**
+   - Operation: "Present for Approval"
+   - Input: proposal from step 5
+   - Returns: user response (yes/edit/later/no)
+
+2. **Gatekeeper will:**
+   - Show complete content with size information
+   - Present high-value insights captured
+   - Show size: current → proposed (X/Y lines, Z%)
+   - Handle user response
+
+**Note:** claudemd-gatekeeper handles all presentation and user interaction
 
 ### 7. Handle User Response
 
 **If yes:**
-- Create or update file
-- Confirm creation/update
-- Note that Claude Code will auto-load this for future work in this directory
+- Proceed to step 8 (Create/Update File)
 
 **If edit:**
 - Enter conversational editing mode
 - Make adjustments based on feedback
-- Show revised version
-- Repeat approval process
+- Call gatekeeper again: "Generate Proposal" with refined content
+- Re-present for approval (repeat step 6)
 
 **If later:**
 - Note suggestion in current work file (if working on issue)
@@ -235,22 +253,25 @@ See `agents/shared/size-validation.md` for complete presentation format and size
 
 ### 8. Create/Update File
 
-**Final validation:**
-1. Count lines in final approved content
-2. Verify ≤200 (root) or ≤150 (module)
-3. If over: ask user to trim further
-4. Only write if within limits
+Delegate to claudemd-gatekeeper:
 
-**If creating:**
-- Use Write tool to create {directory}/CLAUDE.md
+1. **Call claudemd-gatekeeper operation:**
+   - Operation: "Apply Proposal"
+   - Input: approved proposal
+   - Returns: success status, final file path, final size
 
-**If updating:**
-- Use Edit tool on existing file to apply changes
+2. **Gatekeeper will:**
+   - Do final size validation
+   - Create or update {directory}/CLAUDE.md
+   - Verify within limits
+   - Confirm successful write
 
-**Confirm with size:**
-- Show final size: {final_lines} / {max} lines ({percentage}%)
-- Note that Claude Code will auto-load this file in future sessions
-- If >80% capacity: suggest pruning before next update
+3. **Confirm with user:**
+   - Show final size: {final_lines} / {max} lines ({percentage}%)
+   - Note that Claude Code will auto-load this file in future sessions
+   - If >80% capacity: suggest pruning before next update
+
+**Note:** claudemd-gatekeeper handles all file operations and validation
 
 ## Special Cases
 

@@ -13,13 +13,26 @@ Save current progress, capture decisions and learnings, suggest context updates 
 
 ### 1. Verify Active Work
 
-Check `.claude/state.md` for active issue.
+Delegate to state-gatekeeper:
 
-**If no active work:**
-- Check for work files in `.claude/work/`
-- If found: Reconstruct state
-- If none: Inform user - nothing to save
-- Suggest `/keep:start {number}` to begin work
+1. **Call state-gatekeeper operation:**
+   - Operation: "Get Active Work"
+   - Input: None
+   - Returns: active work status, issue number, title, metadata
+
+2. **Handle result:**
+
+   **If active work exists:**
+   - Proceed with save workflow
+   - Use returned issue number and metadata
+
+   **If no active work:**
+   - Gatekeeper will check `.claude/work/` for any files
+   - If files found: Suggest reconstruction
+   - If none: Inform user - nothing to save
+   - Suggest `/keep:start {number}` to begin work
+
+**Note:** state-gatekeeper handles all verification and reconstruction logic
 
 ### 2. Review Recent Conversation
 
@@ -76,63 +89,90 @@ Update `.claude/work/{issue}.md` (use Edit tool):
 
 ### 4. Update State
 
-Update `.claude/state.md` (use Edit tool):
+Delegate to state-gatekeeper:
 
-**Update Progress section:**
-- Mark completed items with ✅
-- Update in-progress items with 🔄 and percentage
-- Add new pending items with ⏸️
+1. **Call state-gatekeeper operation:**
+   - Operation: "Update Progress"
+   - Input: progress_items, next_steps, open_questions
+   - Returns: success status, timestamp
 
-**Update Next Steps:**
-- List 2-3 immediate next actions
+2. **State gatekeeper will:**
+   - Update Progress section with items and percentages
+   - Update Next Steps
+   - Update Open Questions
+   - Update Last Updated timestamp
+   - Validate file format
 
-**Update Open Questions:**
-- Add new questions or mark existing as decided
-
-**Update Last Updated timestamp**
+**Note:** state-gatekeeper handles all state file updates and validation
 
 ### 5. Check Learning Threshold
 
-Count decisions by directory from current work file:
+Delegate to quality-gatekeeper:
 
-**Threshold detection:**
-- **3+ decisions** in same directory → Suggest CLAUDE.md update
-- **2+ sessions** in same directory → Consider new CLAUDE.md
-- **Recurring patterns** → Document in relevant CLAUDE.md
-- **Security/performance insights** → Always capture
+1. **Call quality-gatekeeper operation:**
+   - Operation: "Check Learning Threshold"
+   - Input: work file data (decisions, learnings), directory
+   - Returns: threshold_met status, affected directories, reasoning
 
-**Quality Filter - "6-Month Test":**
+2. **Gatekeeper will:**
+   - Count decisions by directory
+   - Detect patterns (3+ in same dir, 2+ sessions)
+   - Check for security/performance insights
+   - Apply quality filter to all learnings
+   - Return threshold status and recommendations
 
-See `agents/shared/quality-filters.md` for detailed quality assessment criteria and examples of high-value vs low-value content.
+3. **Handle result:**
 
-If threshold met AND quality filter passed, proceed to Step 6. Otherwise skip to Step 7.
+   **If threshold met AND quality filter passed:**
+   - Proceed to Step 6 (Generate CLAUDE.md Proposal)
+
+   **If threshold not met or quality filter failed:**
+   - Skip to Step 7 (Optional GitHub Sync)
+
+**Note:** quality-gatekeeper handles all threshold detection and 6-month test application
 
 ### 6. Generate CLAUDE.md Proposal (if threshold met)
 
-See `agents/shared/size-validation.md` for complete size validation process including limits, budget calculation, and enforcement.
+Delegate to claudemd-gatekeeper:
 
-**Key steps:**
+1. **Call claudemd-gatekeeper operation:**
+   - Operation: "Generate Proposal"
+   - Input: target_directory, proposed_content, operation_type (create/update), context
+   - Returns: proposal with size info, quality assessment, diff
 
-1. Read existing CLAUDE.md (if exists) and count lines
-2. Use size limits: 200 root, 150 module (warn at 80% capacity)
-3. Filter learnings through quality criteria (Step 5)
-4. Draft concise, high-value content only
-5. If >80% capacity, identify content to remove
-6. Generate diff showing changes
-7. Present for approval with complete size information
+2. **Gatekeeper will:**
+   - Determine if root (200 max) or module (150 max)
+   - Read existing CLAUDE.md if exists, count lines
+   - Apply quality filter to proposed content
+   - Calculate size budget
+   - If >80% capacity: identify stale content to prune
+   - Generate complete diff showing adds/removes
+   - Return proposal ready for approval
 
-**Content Guidelines:**
-- Focus on "why" and gotchas, not "what" (visible in code)
-- Be concise: 1-3 bullet points, not paragraphs
-- Use examples only when they clarify non-obvious behavior
-- Avoid repeating what's in code/docs
+3. **Handle proposal result:**
 
-**User response options:**
-- If yes: Update CLAUDE.md and verify size within limits
-- If edit: Enter conversational editing mode, re-check constraints
-- If later or no: Note decision in work file and continue
+   **Call claudemd-gatekeeper operation:**
+   - Operation: "Present for Approval"
+   - Input: proposal from previous step
+   - Returns: user response (yes/edit/later/no)
 
-See `skills/keep/references/file-formats.md` for CLAUDE.md format guidelines.
+4. **Handle user response:**
+
+   **If yes:**
+   - Call claudemd-gatekeeper: "Apply Proposal"
+   - Verify successful write
+   - Confirm file within limits
+
+   **If edit:**
+   - Enter conversational editing mode
+   - Call gatekeeper again: "Generate Proposal" with refined content
+   - Re-present for approval
+
+   **If later or no:**
+   - Note decision in work file
+   - Continue workflow
+
+**Note:** claudemd-gatekeeper handles all size validation, quality filtering, and diff generation
 
 ### 7. Optional GitHub Sync
 
@@ -143,32 +183,33 @@ See `skills/keep/references/file-formats.md` for CLAUDE.md format guidelines.
 
 **If syncing to GitHub:**
 
-1. Generate progress summary using template from `skills/keep/references/templates/github-progress.md` (load template when needed):
+Delegate to github-gatekeeper:
 
-```markdown
-## Progress Update - {date} {time}
+1. **Call github-gatekeeper operation:**
+   - Operation: "Sync Progress Update"
+   - Input: issue_number, update_content, update_type: "progress"
+   - Returns: success status or queued status
 
-✅ Completed:
-- {completed item}
+2. **Gatekeeper will:**
+   - Check GitHub availability
+   - Format progress summary using template
+   - Post comment to issue with retry logic
+   - Handle offline mode (queue for later)
+   - Return comment URL (if successful) or queue confirmation (if offline)
 
-🔄 In Progress:
-- {current item} ({percentage}% done)
+3. **Record result:**
+   - If posted: Record sync timestamp and URL in work file
+   - If queued: Note in work file that sync is pending
+   - Confirm with user
 
-💡 Key Decisions:
-- {decision}: {rationale}
-
-Next: {next steps}
-```
-
-2. Post via `gh issue comment {number} --body "{summary}"`
-3. Record sync timestamp in work file
-4. Confirm posted with comment URL
-
-**If sync fails:**
+**If sync skipped or fails:**
 - Save everything locally
-- Note sync needed
+- Note sync needed in blockers
 - Don't fail workflow
 - Preserve all data
+- Suggest retry later if needed
+
+**Note:** github-gatekeeper handles availability checking, retries, offline mode, and formatting
 
 ### 8. Confirm Capture
 

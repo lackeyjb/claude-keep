@@ -14,6 +14,22 @@ Issue number: {{args}}
 No issue number provided. The start sub-agent will help you discover starter work using the Zero-Issues Workflow.
 {{/if}}
 
+## Pre-Flight Checks
+
+Before delegating to the start sub-agent:
+
+1. **Verify `.claude/` directory exists**
+   - If missing: create it
+   - Create `.claude/work/` and `.claude/archive/` subdirectories
+
+2. **Verify `.claude/state.md` format**
+   - If missing: will be created by sub-agent
+   - If exists but malformed: warn user, offer to repair
+
+3. **Check for active work**
+   - If active work exists and recent: suggest resuming with `/keep:start {issue}`
+   - If active work exists but old: suggest refreshing
+
 ## Delegation
 
 Use the Task tool to invoke the start sub-agent:
