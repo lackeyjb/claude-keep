@@ -1,7 +1,7 @@
 {
   "name": "keep",
   "description": "Project memory and workflow management for software development. Detects resumable work at session start. Provides commands for starting work (/keep:start), saving progress (/keep:save), completing tasks (/keep:done), and growing context (/keep:grow). Integrates with GitHub issues when available.",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "Bryan Lackey",
     "url": "https://github.com/lackeyjb/claude-keep"
