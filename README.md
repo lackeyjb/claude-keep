@@ -116,7 +116,8 @@ keep/
 │   ├── start.md                 # Start workflow agent
 │   ├── save.md                  # Save workflow agent
 │   ├── done.md                  # Done workflow agent
-│   └── grow.md                  # Grow workflow agent
+│   ├── grow.md                  # Grow workflow agent
+│   └── shared/                  # Shared patterns (error handling, principles, etc.)
 └── skills/keep/
     ├── SKILL.md                 # Keep skill intelligence
     ├── references/              # File format specs, workflows
@@ -175,9 +176,12 @@ Save progress and capture learnings.
 
 **What it does:**
 - Reviews recent conversation for progress, decisions, learnings
+- Filters through "6-month test" - only captures high-value insights
 - Updates `.claude/work/{issue}.md` with timestamped entries
-- Checks if patterns emerged (3+ decisions in same area)
-- Suggests CLAUDE.md updates when threshold met
+- Checks if patterns emerged (3+ high-value decisions in same area)
+- Suggests CLAUDE.md updates when threshold met AND passes quality filter
+- Enforces strict size limits: 200 lines (root), 150 lines (module)
+- Requires pruning when files >80% capacity
 - Optional: Sync progress summary to GitHub
 
 **Flags:**
@@ -218,26 +222,37 @@ Complete work and sync to GitHub.
 Create or update CLAUDE.md files for project context.
 
 ```bash
-/keep:grow .           # Analyze project root
-/keep:grow src/auth    # Analyze specific module
-/keep:grow --update    # Update existing CLAUDE.md
+/keep:grow .              # Analyze project root
+/keep:grow src/auth       # Analyze specific module
+/keep:grow --update       # Update existing CLAUDE.md
+/keep:grow . --condense   # Prune bloated CLAUDE.md
 ```
 
 **What it does:**
-- Analyzes directory for patterns and abstractions
+- Analyzes directory for non-obvious patterns and gotchas
+- Applies "6-month test" - would this matter later?
 - Assesses if CLAUDE.md would be valuable
-- Generates complete CLAUDE.md proposal
+- Generates concise CLAUDE.md proposal (with line counts)
+- Validates size: 200 line max (root), 150 line max (module)
+- Requires pruning if >80% capacity before adding content
 - Shows proposal for review/editing
-- Creates file if approved
+- Creates file if approved and within size limits
 
 **When to use:**
 - Initial setup on existing project (create root CLAUDE.md)
-- Document a module after patterns emerge
+- Document a module after non-obvious patterns emerge
 - Update existing CLAUDE.md with new learnings
+- Condense bloated CLAUDE.md files
 - Manually trigger if automatic suggestion was missed
+
+**When NOT to use:**
+- Obvious file structure
+- Standard framework patterns only
+- No surprising gotchas
 
 **Flags:**
 - `--update` - Update existing CLAUDE.md
+- `--condense` - Prune bloated CLAUDE.md to fit size limits
 - `--force` - Create even if patterns unclear
 
 ## Example Workflow
@@ -325,18 +340,25 @@ Keep works best when used at natural checkpoints in your workflow:
 ### Intelligent Learning Capture
 
 When you run `/keep:save`, Keep captures from recent conversation:
-- **Decisions** - Technical choices with rationale
-- **Learnings** - Gotchas, non-obvious behaviors, surprises
-- **Patterns** - Approaches that work well
+- **Decisions** - Technical choices with rationale (filtered through "6-month test")
+- **Learnings** - Non-obvious gotchas, surprises, framework quirks
+- **Patterns** - Critical approaches that prevent mistakes
 - **Progress** - What you accomplished
+
+**Quality filter:**
+- Only captures insights that pass "6-month test" - would this matter later?
+- Skips obvious patterns, implementation details, standard framework usage
+- Focuses on gotchas, security/performance implications, architectural "why"
 
 ### Context Evolution
 
-When patterns emerge (3+ related decisions, or 2+ sessions in directory):
+When high-value patterns emerge (3+ decisions passing quality filter):
 - Keep suggests creating/updating CLAUDE.md files
-- Shows proposed changes as diffs
+- Shows proposed changes as diffs with line counts
+- Enforces strict size limits (200 lines root, 150 lines module)
+- Requires pruning when >80% capacity before adding
 - Gets your approval before updating
-- Keeps context concise and current
+- Keeps context ruthlessly concise and high-value
 
 ### Smart Recommendations
 
@@ -508,7 +530,7 @@ This is a personal project but suggestions welcome! The skill is designed to be 
 - **Skill documentation:** `skills/keep/SKILL.md` - Core philosophy and principles
 - **File format specs:** `skills/keep/references/file-formats.md`
 - **Workflow examples:** `skills/keep/references/workflows.md`
-- **GitHub templates:** `skills/keep/references/github-templates.md`
+- **GitHub comment templates:** `skills/keep/references/templates/`
 - **Troubleshooting:** `skills/keep/references/troubleshooting.md`
 - **Zero-issues workflow:** `skills/keep/references/zero-issues.md`
 - **GitHub scripts:** `skills/keep/scripts/`

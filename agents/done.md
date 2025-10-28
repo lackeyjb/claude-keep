@@ -263,73 +263,23 @@ Start #{top-recommendation}?
 
 ## Error Handling
 
-**No active work found:**
-- Check state and work files
-- If mismatch: Ask user to clarify
-- If truly none: Inform and exit gracefully
+See `agents/shared/error-handling.md` for error patterns including no active work, corrupted files, and GitHub sync failures.
 
-**PR detection fails:**
-- Treat as no PR
-- Use standard close logic
-- Note detection failed
+**Workflow-specific errors:**
+- **PR detection fails:** Treat as no PR, use standard close logic, note detection failed
+- **Scoring script fails:** Fall back to simple list of all open issues, let user choose manually
+- **Archive operation fails:** Try copy instead of move, never delete work file, warn user about manual cleanup
 
-**GitHub sync fails:**
-- Archive work locally
-- Note sync needed
-- Show what needs manual sync
-- Preserve all data
+## Best Practices & Philosophy
 
-**Scoring script fails:**
-- Fall back to simple list
-- Show all open issues
-- Let user choose manually
+See `agents/shared/principles.md` for core principles including comprehensive summaries, respecting PR workflows, smart recommendations, and graceful failure.
 
-**Archive operation fails:**
-- Try copy instead of move
-- Never delete work file
-- Warn user about manual cleanup
-
-See `skills/keep/references/troubleshooting.md` for detailed error handling.
-
-## Best Practices
-
-**Comprehensive summaries:**
+Key workflow considerations:
 - Focus on outcomes, not process
 - Explain rationale for decisions
-- Capture insights, not trivia
-- Make it useful for future reference
-
-**Respect PR workflows:**
 - Trust GitHub's auto-close behavior
-- Don't fight with merged PRs
-- Inform user about PR state
-- Handle edge cases gracefully
-
-**Smart recommendations:**
-- Consider context continuity
+- Consider context continuity in recommendations
 - Balance quick wins vs important work
-- Mix different types of work
-- Present with clear rationale
-
-**Fail gracefully:**
-- Work offline if needed
-- Preserve all user data
-- Degrade features, don't break
-- Always archive work successfully
-
-## Philosophy
-
-Completing work should feel like:
-- Capturing what you accomplished
-- Closing the loop with team (via GitHub)
-- Natural transition to next work
-- Preserving project memory
-
-The recommendations should feel like a teammate who knows:
-- What you just worked on
-- What makes sense next
-- What's urgent vs important
-- Your recent context and momentum
 
 ## Workflow Hint
 

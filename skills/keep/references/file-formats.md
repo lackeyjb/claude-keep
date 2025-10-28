@@ -2,6 +2,41 @@
 
 This document contains complete specifications for all Keep file formats. Load this file when creating new files or when needing format details.
 
+## CRITICAL: Conciseness Guidelines
+
+**CLAUDE.md files MUST be concise:**
+- **Root CLAUDE.md:** 200 line MAXIMUM (target 120-150)
+- **Module CLAUDE.md:** 150 line MAXIMUM (target 80-100)
+- Size enforced on every update
+- Pruning required when >80% capacity
+
+**The "6-Month Test":**
+Before adding anything, ask: "Will this matter to me 6 months from now?"
+
+**What TO include:**
+- ✅ Non-obvious gotchas and surprises
+- ✅ Security/performance implications
+- ✅ Architectural decisions with "why"
+- ✅ Common mistakes to avoid
+- ✅ Framework/library quirks worth remembering
+
+**What NOT to include:**
+- ❌ File paths/directory structure (visible via ls/grep)
+- ❌ Standard framework usage patterns
+- ❌ Implementation details visible in code
+- ❌ API documentation (belongs in code comments)
+- ❌ Setup steps in package.json/README
+- ❌ Obvious naming conventions
+- ❌ Generic best practices from docs
+- ❌ Tool installation instructions
+- ❌ Comprehensive feature lists
+
+**Writing style:**
+- Use bullets, NOT paragraphs
+- 1 line per point when possible
+- Examples ONLY when they clarify gotchas
+- No fluff, preamble, or generic explanations
+
 ---
 
 ## Root CLAUDE.md
@@ -47,65 +82,79 @@ This document contains complete specifications for all Keep file formats. Load t
 **Management:**
 - Created manually or by Keep skill
 - Updated by Keep skill suggestions (with user approval)
-- Kept concise (aim for < 200 lines)
+- **MAXIMUM 200 lines** (enforced - target 120-150)
+- Size validated on every update
+- Pruning required when >80% capacity
 
-**Example:**
+**Example (CONCISE - 45 lines):**
 ```markdown
 # Project: TaskMaster API
 
 ## Tech Stack
-- Node.js 18.x with TypeScript 5.x
-- Express 4.x for REST API
-- PostgreSQL 14 with TypeORM
-- Redis for caching and rate limiting
+- Node 18, TypeScript 5, Express 4
+- PostgreSQL 14 + TypeORM, Redis
 - Jest for testing
 
 ## Architecture
-RESTful API following repository pattern:
-- Controllers handle HTTP
-- Services contain business logic
-- Repositories abstract database access
-- Middleware for auth, validation, rate limiting
+RESTful API with repository pattern (controllers → services → repositories)
 
-## Project Structure
-```
-src/
-├── controllers/    # HTTP request handlers
-├── services/       # Business logic
-├── repositories/   # Database access
-├── middleware/     # Express middleware
-├── models/         # TypeORM entities
-└── utils/          # Shared utilities
-tests/              # Jest tests
-migrations/         # TypeORM migrations
-```
+Key decisions:
+- TypeORM for type safety and migrations
+- Redis for caching + rate limiting
+- JWT access (15min) + refresh tokens (7d rotation)
 
 ## Development
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start dev server (port 3000)
-npm test             # Run all tests
-npm run migrate      # Run database migrations
+npm run dev    # Port 3000
+npm test       # Run tests
 ```
 
 ## Conventions
-- **Naming:** camelCase for functions, PascalCase for classes
-- **Files:** One class per file, match file name to class name
-- **Tests:** Co-located with source (*.test.ts)
-- **Commits:** Conventional commits (feat:, fix:, etc.)
-- **Branches:** feature/, bugfix/, hotfix/
+- camelCase functions, PascalCase classes
+- Tests co-located: *.test.ts
+- Conventional commits (feat:, fix:)
 
-## Authentication
-- JWT access tokens (15min expiry)
-- Refresh tokens stored in Redis (7 day expiry)
-- bcrypt for password hashing (12 rounds)
-- Rate limiting on auth endpoints (5 attempts/15min)
+## Gotchas
+- Health checks (/health, /metrics) bypass rate limiting - don't apply middleware globally
+- Refresh tokens use one-time rotation - invalidate immediately after use
+- bcrypt at 12 rounds - don't increase (perf impact)
 
-## Recent Changes (Last 3 months)
+## Recent Changes
 - 2024-10: Added rate limiting (express-rate-limit + Redis)
-- 2024-09: Migrated from Sequelize to TypeORM
-- 2024-08: Added refresh token rotation for security
+- 2024-09: Migrated Sequelize → TypeORM
 ```
+
+**Anti-pattern Example (TOO VERBOSE - 110 lines):**
+```markdown
+# Project: TaskMaster API
+
+## Overview
+TaskMaster API is a comprehensive task management system built with modern
+TypeScript and Node.js. It provides a RESTful interface for managing tasks,
+users, and teams with enterprise-grade authentication and authorization.
+
+## Tech Stack
+
+### Runtime & Language
+- Node.js 18.x LTS - chosen for stability and long-term support
+- TypeScript 5.x - provides type safety and better developer experience
+- ES2022 target - modern JavaScript features
+
+### Web Framework
+- Express 4.x - battle-tested, extensive ecosystem
+- cors - handle cross-origin requests
+- helmet - security headers
+- compression - gzip responses
+
+[... 80 more lines of obvious details ...]
+```
+
+**Why the concise version is better:**
+- ✅ 45 lines vs 110 lines (59% smaller)
+- ✅ Focuses on non-obvious gotchas
+- ✅ Skips details visible in package.json
+- ✅ Emphasizes "why" decisions were made
+- ✅ No fluff or generic explanations
 
 ---
 
@@ -149,78 +198,81 @@ What this module does and why it exists
 **Management:**
 - Created by Keep skill when working in new area (with user approval)
 - Updated as patterns emerge and learnings accumulate
+- **MAXIMUM 150 lines** (enforced - target 80-100)
 - Keep skill suggests updates, user reviews and approves
+- Size validated on every update
+- Pruning required when >80% capacity
 
 **When to Create:**
 - Working in a directory for 2nd+ time
-- Patterns are emerging that should be documented
-- Complex logic that benefits from explanation
-- Don't create prematurely - let need emerge
+- Non-obvious patterns worth documenting
+- Complex gotchas that benefit from explanation
+- **Don't create prematurely** - let need emerge
+- Must pass "6-month test": will this matter later?
 
-**Example:**
+**When NOT to Create:**
+- File structure is obvious
+- Standard framework patterns only
+- No surprising gotchas
+- Code is self-explanatory
+
+**Example (CONCISE - 35 lines):**
 ```markdown
 # Authentication Module
 
 ## Purpose
-Handles user authentication, token management, and session security.
+User auth with JWT + refresh token rotation, rate limiting for brute force protection.
 
 ## Key Patterns
+- JWT access (15min) + refresh (7d, one-time rotation in Redis)
+- bcrypt 12 rounds - don't increase (perf impact)
+- Per-IP rate limiting: 5/15min (login), 3/15min (reset)
 
-### JWT Token Strategy
-- **Access tokens:** 15 minute expiry, stored in memory
-- **Refresh tokens:** 7 day expiry, stored in Redis
-- **Rotation:** Refresh tokens rotate on use (one-time use)
+## Gotchas
+- **Health checks bypass rate limiting** - exclude /health, /metrics or monitoring breaks
+- **Refresh tokens are one-time use** - invalidate immediately after rotation
+- **Rate limit headers auto-added** - don't manually set X-RateLimit-*
+- **Redis failures degrade gracefully** - falls back to in-memory (per-instance)
+- **Never log tokens** - use token.substring(0,10) for debugging
 
-### Password Security
-- bcrypt with 12 rounds (balance of security and performance)
-- Validation: minimum 8 chars, 1 uppercase, 1 number, 1 special
-- Never log passwords or tokens (security audit requirement)
-
-### Rate Limiting
-- Per-IP rate limiting: 5 attempts per 15 minutes
-- Applies to: /login, /register, /reset-password
-- Implementation: express-rate-limit with Redis store
-- Health checks excluded from rate limiting
-
-## API / Public Interface
-
-### Authentication Endpoints
-- `POST /auth/login` - Email/password authentication
-- `POST /auth/refresh` - Refresh access token
-- `POST /auth/logout` - Invalidate tokens
-- `POST /auth/register` - Create new user
-
-### Middleware
-- `authenticate()` - Verify JWT access token
-- `rateLimitAuth()` - Apply rate limiting
-
-## Recent Learnings
-
-### Rate Limiting Implementation (Oct 2024)
-- express-rate-limit has excellent TypeScript support
-- Remember to exclude health check endpoints (/health, /metrics)
-- Redis store required for distributed rate limiting
-- Rate limit headers (X-RateLimit-*) automatically added
-
-### Token Rotation (Sept 2024)
-- Refresh token rotation prevents reuse attacks
-- Need to invalidate old refresh token immediately
-- Redis TTL handles automatic cleanup
-
-### Common Mistakes
-- ❌ Forgetting to hash passwords in tests (use test fixtures)
-- ❌ Logging full JWT tokens (use token.substring(0, 10))
-- ❌ Not handling Redis connection failures (fallback gracefully)
-
-## Dependencies
-- External: jsonwebtoken, bcrypt, express-rate-limit
-- Internal: src/models/User, src/repositories/UserRepository
+## Common Mistakes
+- ❌ Forgetting to hash passwords in test fixtures
+- ❌ Applying rate limiting globally (breaks health checks)
+- ❌ Not invalidating old refresh token on rotation
 
 ## Testing
-- Unit tests: src/auth/*.test.ts
-- Integration tests: tests/integration/auth.test.ts
-- Mock Redis in tests (redis-mock package)
+- Mock Redis in unit tests (redis-mock)
+- Real Redis for integration tests
 ```
+
+**Anti-pattern Example (TOO VERBOSE - 95 lines):**
+```markdown
+# Authentication Module
+
+## Overview
+This module provides comprehensive authentication and authorization services
+for the TaskMaster API. It implements industry-standard security practices
+including JWT tokens, refresh token rotation, password hashing, and rate
+limiting to protect against brute force attacks.
+
+## Purpose
+The authentication module is responsible for:
+- User registration and login
+- Password hashing and validation
+- JWT token generation and validation
+- Refresh token management and rotation
+- Rate limiting on authentication endpoints
+- Session management
+
+[... 75 more lines of API docs, obvious patterns, implementation details ...]
+```
+
+**Why the concise version is better:**
+- ✅ 35 lines vs 95 lines (63% smaller)
+- ✅ Focuses on gotchas and surprises
+- ✅ No API documentation (use code comments)
+- ✅ Emphasizes common mistakes
+- ✅ Skips obvious implementation details
 
 ---
 

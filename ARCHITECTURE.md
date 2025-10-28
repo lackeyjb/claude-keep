@@ -317,11 +317,16 @@ file-formats.md:            611 lines (when generating CLAUDE.md)
 
 ```
 .claude/
-├── agents/                  # NEW: Workflow sub-agents
-│   ├── start.md            # Start workflow (120 lines)
-│   ├── save.md             # Save workflow (100 lines)
-│   ├── done.md             # Done workflow (140 lines)
-│   └── grow.md             # Grow workflow (120 lines)
+├── agents/                  # Workflow sub-agents & shared patterns
+│   ├── start.md            # Start workflow (223 lines)
+│   ├── save.md             # Save workflow (209 lines)
+│   ├── done.md             # Done workflow (290 lines)
+│   ├── grow.md             # Grow workflow (354 lines)
+│   └── shared/             # Shared patterns (error handling, principles, etc.)
+│       ├── error-handling.md        # Error recovery patterns (83 lines)
+│       ├── principles.md            # Core execution principles (123 lines)
+│       ├── quality-filters.md       # Quality assessment & 6-month test (150 lines)
+│       └── size-validation.md       # CLAUDE.md size enforcement (145 lines)
 ├── commands/               # UPDATED: Thin wrappers
 │   ├── start.md            # Delegates to sub-agent (30 lines)
 │   ├── save.md             # Delegates to sub-agent (30 lines)

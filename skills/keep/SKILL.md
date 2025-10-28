@@ -77,13 +77,13 @@ Keep provides four commands that users invoke manually as they work:
 Start work on a GitHub issue with context loading. Omit issue number for recommendations based on continuity and priority.
 
 ### `/keep:save [--sync]`
-Save progress and capture learnings. Automatically suggests CLAUDE.md updates when patterns emerge (3+ decisions in same area). Use `--sync` to post update to GitHub.
+Save progress and capture learnings. Suggests CLAUDE.md updates ONLY when high-value patterns emerge (3+ decisions passing 6-month test). All CLAUDE.md updates enforce strict size limits. Use `--sync` to post update to GitHub.
 
 ### `/keep:done [--close]`
 Complete work, generate summary, and recommend next issue. Detects PR state and handles closing intelligently. Use `--close` to auto-close issue.
 
-### `/keep:grow [directory]`
-Create or update CLAUDE.md files for project context. Analyzes directory for patterns and generates documentation.
+### `/keep:grow [directory] [--update|--condense]`
+Create or update CLAUDE.md files for project context. Analyzes directory and generates concise documentation (200 line max for root, 150 line max for modules). Use `--update` to update existing, `--condense` to prune bloated files.
 
 ## Command Delegation
 

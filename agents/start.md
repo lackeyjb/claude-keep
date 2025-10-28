@@ -198,23 +198,7 @@ Provide conversational summary with:
 
 ## Error Handling
 
-**GitHub unavailable:**
-- Check `which gh` first
-- If missing or network error: Warn and offer local-only mode
-- Continue workflow without GitHub
-- Note sync needed for later
-
-**Issue not found:**
-- Verify issue number
-- Suggest checking GitHub web UI
-- Offer to create new issue or work without tracking
-
-**Corrupted state:**
-- If `.claude/state.md` invalid: Reconstruct from work files
-- Show reconstructed state for confirmation
-- Never silently delete - backup to `.claude/state.md.backup`
-
-See `skills/keep/references/troubleshooting.md` for detailed error handling - load only when encountering errors.
+See `agents/shared/error-handling.md` for error patterns and recovery strategies.
 
 ## Directory Structure
 
@@ -226,33 +210,9 @@ mkdir -p .claude/archive
 
 Create `.claude/state.md` if missing.
 
-## Best Practices
+## Best Practices & Philosophy
 
-**Be conversational:**
-- Present findings naturally, not as form fields
-- Ask questions when requirements unclear
-- Suggest, don't prescribe
-
-**Fail gracefully:**
-- Work offline if GitHub unavailable
-- Continue with partial context if files missing
-- Preserve user data above all else
-
-**Progressive disclosure:**
-- Don't overwhelm with all details at once
-- Load references only when needed
-- Present information as user needs it
-
-## Philosophy
-
-Keep starting work should feel like having an informed teammate who:
-- Understands the project context
-- Remembers related work
-- Suggests practical approaches
-- Asks good questions
-- Gets you started quickly
-
-Focus on being helpful, not ceremonial.
+See `agents/shared/principles.md` for core execution principles including conversational approach, graceful failure, and progressive disclosure.
 
 ## Workflow Hint
 

@@ -101,48 +101,36 @@ Count decisions by directory from current work file:
 - **Recurring patterns** → Document in relevant CLAUDE.md
 - **Security/performance insights** → Always capture
 
-If threshold met, proceed to Step 6. Otherwise skip to Step 7.
+**Quality Filter - "6-Month Test":**
+
+See `agents/shared/quality-filters.md` for detailed quality assessment criteria and examples of high-value vs low-value content.
+
+If threshold met AND quality filter passed, proceed to Step 6. Otherwise skip to Step 7.
 
 ### 6. Generate CLAUDE.md Proposal (if threshold met)
 
-**Process:**
-1. Read existing CLAUDE.md (or note if missing)
-2. Draft new section or updates based on decisions/learnings
-3. Generate diff showing changes
-4. Present to user for approval
+See `agents/shared/size-validation.md` for complete size validation process including limits, budget calculation, and enforcement.
 
-**Presentation format:**
-```markdown
-💡 Suggestion: Update {path}/CLAUDE.md with {pattern-name}?
+**Key steps:**
 
-I've noticed {count} decisions about {topic} in this area.
+1. Read existing CLAUDE.md (if exists) and count lines
+2. Use size limits: 200 root, 150 module (warn at 80% capacity)
+3. Filter learnings through quality criteria (Step 5)
+4. Draft concise, high-value content only
+5. If >80% capacity, identify content to remove
+6. Generate diff showing changes
+7. Present for approval with complete size information
 
-Proposed addition:
-─────────────────────────────────
-{show proposed content or diff}
-─────────────────────────────────
+**Content Guidelines:**
+- Focus on "why" and gotchas, not "what" (visible in code)
+- Be concise: 1-3 bullet points, not paragraphs
+- Use examples only when they clarify non-obvious behavior
+- Avoid repeating what's in code/docs
 
-This will help future work in {directory} by:
-- {benefit 1}
-- {benefit 2}
-
-Add this to {path}/CLAUDE.md?
-[yes / edit / later / no]
-```
-
-**If user approves:**
-- Update CLAUDE.md using Edit tool
-- Keep concise (aim for <200 lines total)
-- Confirm update
-
-**If user wants to edit:**
-- Enter conversational editing mode
-- Make adjustments based on feedback
-- Show final version for approval
-
-**If user says later or no:**
-- Note decision in work file
-- Continue without update
+**User response options:**
+- If yes: Update CLAUDE.md and verify size within limits
+- If edit: Enter conversational editing mode, re-check constraints
+- If later or no: Note decision in work file and continue
 
 See `skills/keep/references/file-formats.md` for CLAUDE.md format guidelines.
 
@@ -200,56 +188,17 @@ Present summary of what was saved:
 
 ## Error Handling
 
-**No active work found:**
-- Read `.claude/state.md` to check
-- If state says active but no file: Offer to recreate from GitHub
-- If truly no active work: Inform user, suggest `/keep:start`
+See `agents/shared/error-handling.md` for error patterns including no active work, corrupted files, and GitHub sync failures.
 
-**Work file corrupted:**
-- Backup to `.claude/work/{issue}.md.backup`
-- Attempt to repair based on GitHub issue
-- Show user reconstructed content
-- Get confirmation before overwriting
+## Best Practices & Philosophy
 
-**GitHub sync fails:**
-- Network error → Note sync needed, continue
-- Auth error → Suggest `gh auth login`, continue
-- Rate limit → Note time until reset, continue
-- Never fail workflow due to GitHub issues
+See `agents/shared/principles.md` for core principles including selective capture, CLAUDE.md suggestions, graceful failure, and philosophy of helpful progression.
 
-See `skills/keep/references/troubleshooting.md` for detailed error handling.
-
-## Best Practices
-
-**Be selective in what to capture:**
-- Don't capture every minor step
-- Focus on meaningful progress
-- Emphasize "why" over "what"
-- Make it useful for future you (6 months later)
-
-**CLAUDE.md suggestions:**
-- Only suggest when threshold genuinely met
-- Make proposals specific and concrete
-- Show complete diffs, not vague summaries
+Key reminders:
+- Only suggest CLAUDE.md updates when threshold genuinely met AND passes 6-month test
+- Keep proposals concise: 1-3 bullet points maximum
+- Always enforce size limits and show complete diffs
 - Always get approval - never force updates
-- Don't be annoying - suggest when valuable
-
-**Fail gracefully:**
-- Work offline if needed
-- Continue without GitHub if unavailable
-- Preserve user data above all else
-- Degrade features, don't break workflow
-
-## Philosophy
-
-Saving progress should be:
-- Quick and painless
-- Capture what matters
-- Suggest improvements without being pushy
-- Work offline when needed
-- Never lose user data
-
-Think of it as a helpful teammate taking notes while you work, occasionally suggesting "should we document this pattern?"
 
 ## Workflow Hint
 

@@ -11,15 +11,16 @@ Analyze a directory to identify patterns and create/update CLAUDE.md files that 
 
 ## Core Workflow
 
-### 1. Determine Target Directory
+### 1. Parse Arguments and Determine Target Directory
 
-**If directory argument provided:**
-- Use specified directory path
-- Validate it exists
+**Parse flags from arguments:**
+- `--update`: Update existing CLAUDE.md (skip "create new" flow)
+- `--condense`: Prune bloated CLAUDE.md to fit within size limits
+- `--force`: Create even if patterns unclear
 
-**If no argument:**
-- Default to current working directory
-- Or project root if at repository top level
+**Determine directory:**
+- First non-flag argument = target directory
+- If no directory argument: use current working directory or project root
 
 **Validate directory:**
 ```bash
@@ -27,6 +28,19 @@ ls {directory}
 ```
 
 If directory doesn't exist, inform user and exit gracefully.
+
+**Special mode: --condense**
+
+If `--condense` flag present:
+1. Read existing CLAUDE.md
+2. Count current lines
+3. If within limits (≤200 root, ≤150 module): inform user, exit
+4. If over limit: Analyze content and identify low-value items to prune
+5. Generate pruned version that fits within limits
+6. Show diff with line reduction
+7. Get approval and update
+
+Skip normal analysis flow when `--condense` is used.
 
 ### 2. Analyze Directory
 
@@ -84,10 +98,15 @@ Ask these questions:
 - Have patterns emerged, or is it still forming?
 - Risk of premature documentation?
 
+**Quality bar - "6-Month Test":**
+
+See `agents/shared/quality-filters.md` for detailed assessment of whether documentation is valuable and passes quality bar.
+
 **Decision:**
-- If valuable → Proceed to proposal
+- If valuable AND passes quality bar → Proceed to proposal
 - If too early → Suggest waiting
 - If not cohesive → Suggest different scope
+- If patterns are obvious → Skip documentation
 
 ### 4. Check for Existing CLAUDE.md
 
@@ -107,6 +126,14 @@ cat {directory}/CLAUDE.md
 
 ### 5. Generate Proposal
 
+See `agents/shared/size-validation.md` for complete size budget and validation process.
+
+**Quick reference:**
+- **Root CLAUDE.md:** 200 line MAXIMUM (target 120-150 lines)
+- **Module CLAUDE.md:** 150 line MAXIMUM (target 80-100 lines)
+- If updating and >80% capacity: identify content to prune first
+- Target net-zero or negative line growth
+
 Draft CLAUDE.md following format from `skills/keep/references/file-formats.md` (load for format details):
 
 **For root CLAUDE.md (project root):**
@@ -114,31 +141,29 @@ Draft CLAUDE.md following format from `skills/keep/references/file-formats.md` (
 # Project: {Name}
 
 ## Tech Stack
-- Runtime/language versions
-- Major frameworks and libraries
+- Runtime/language versions (concise: "Node 18, TypeScript 5")
+- Major frameworks only (not utilities)
 - Database and infrastructure
 
 ## Architecture
-- High-level pattern (MVC, microservices, etc.)
-- Key architectural decisions
+- High-level pattern (1 sentence)
+- Key architectural decisions (2-3 bullets max)
 
 ## Project Structure
-- Directory organization
-- Module responsibilities
+- Directory organization (just main dirs)
+- Module responsibilities (1 line each)
 
 ## Development
-- Setup instructions
-- Common commands
-- Environment variables
+- Setup: 2-3 commands only
+- Key environment variables only
 
 ## Conventions
-- Naming conventions
-- Code style
-- Testing approach
+- Critical conventions only
+- Gotchas and non-obvious rules
 
 ## Recent Changes (Last 3-6 months)
-- Significant architectural changes
-- New patterns adopted
+- Only significant architectural changes
+- Max 3-4 items
 ```
 
 **For module CLAUDE.md:**
@@ -146,71 +171,45 @@ Draft CLAUDE.md following format from `skills/keep/references/file-formats.md` (
 # {Module Name}
 
 ## Purpose
-What this module does and why
+1-2 sentences on what and why
 
 ## Key Patterns
-- Specific patterns used here
-- Important abstractions
-- Design decisions
-
-## API / Public Interface
-- Key functions/classes
-- How other modules interact
+- Non-obvious patterns only
+- Critical design decisions
+- 3-5 bullets max
 
 ## Recent Learnings
-- Gotchas discovered
-- Performance considerations
-- Security considerations
+- Gotchas that aren't obvious from code
+- Performance/security considerations
 - Common mistakes to avoid
+- 3-5 bullets max
 
-## Dependencies
-- External dependencies
-- Internal dependencies
-
-## Testing
-- Testing approach
-- Key test files
+## Dependencies (optional - only if non-obvious)
+- External dependencies worth noting
+- Internal coupling points
 ```
 
-**Guidelines:**
-- Keep concise (aim for <200 lines)
-- Focus on "why" not "what"
-- Document patterns, not implementation details
-- Include examples if helpful
-- Note gotchas and common mistakes
+**Ruthless Conciseness Guidelines:**
+
+See `agents/shared/quality-filters.md` for detailed guidance on what to include vs exclude, plus examples of good vs bad content.
+
+**Key principles:**
+- Focus on non-obvious gotchas, not obvious patterns
+- Explain decisions and surprises, not structure
+- Use bullets, not paragraphs
+- 1 line per point when possible
+- Examples only when they clarify gotchas
 
 ### 6. Present Proposal
 
-**Show complete content:**
-```markdown
-📝 Proposed CLAUDE.md for {directory}
+See `agents/shared/size-validation.md` for complete presentation format and size warning guidelines.
 
-I've analyzed {directory} and found patterns worth documenting:
-• {pattern 1}
-• {pattern 2}
-• {pattern 3}
-
-{If updating existing:}
-Proposed changes:
-─────────────────────────────────
-{show diff}
-─────────────────────────────────
-
-{If creating new:}
-Proposed content:
-─────────────────────────────────
-{show full content}
-─────────────────────────────────
-
-This will help future work in {directory} by:
-- {benefit 1}
-- {benefit 2}
-- {benefit 3}
-
-{If creating:} Create {directory}/CLAUDE.md?
-{If updating:} Update {directory}/CLAUDE.md?
-[yes / edit / later / no]
-```
+**Quick steps:**
+1. Count lines in proposal
+2. If updating: verify current + net change ≤ limits
+3. Show complete content with size information
+4. Present high-value insights captured
+5. Get user approval (yes / edit / later / no)
 
 ### 7. Handle User Response
 
@@ -236,29 +235,22 @@ This will help future work in {directory} by:
 
 ### 8. Create/Update File
 
+**Final validation:**
+1. Count lines in final approved content
+2. Verify ≤200 (root) or ≤150 (module)
+3. If over: ask user to trim further
+4. Only write if within limits
+
 **If creating:**
-```bash
-# Use Write tool
-Write to: {directory}/CLAUDE.md
-Content: {generated content}
-```
+- Use Write tool to create {directory}/CLAUDE.md
 
 **If updating:**
-```bash
-# Use Edit tool on existing file
-Edit: {directory}/CLAUDE.md
-Apply: {approved changes}
-```
+- Use Edit tool on existing file to apply changes
 
-**Confirm:**
-```markdown
-✅ Created {directory}/CLAUDE.md
-
-Claude Code will automatically load this file when working in {directory} in future sessions.
-
-{If this was triggered by /keep:save suggestion:}
-You can always update this later with `/keep:grow {directory} --update`
-```
+**Confirm with size:**
+- Show final size: {final_lines} / {max} lines ({percentage}%)
+- Note that Claude Code will auto-load this file in future sessions
+- If >80% capacity: suggest pruning before next update
 
 ## Special Cases
 
@@ -282,18 +274,27 @@ When analyzing project root (`.` or project top-level):
 
 When `--update` flag present or updating existing:
 
-**Process:**
-- Read existing content
-- Identify what's outdated or missing
-- Propose specific additions/changes
-- Show as diff
-- Preserve existing valuable content
+**Size-aware process:**
+1. Read existing content and count lines
+2. Identify what's outdated, stale, or low-value
+3. If >80% capacity: MUST remove content before adding
+4. Propose specific additions/changes as diff
+5. Show net line change
+6. Target net-zero or negative growth
 
 **Be surgical:**
 - Don't rewrite unnecessarily
-- Add new sections if patterns emerged
-- Update outdated information
-- Remove stale information
+- Add new high-value insights
+- Remove stale/obvious information
+- Update outdated sections
+- Prioritize pruning over adding
+
+**Content to prune (examples):**
+- Outdated architectural decisions
+- Obvious patterns now visible in code
+- Temporary workarounds that are gone
+- Generic advice available in docs
+- Implementation details
 
 ### No Clear Patterns Found
 
@@ -324,59 +325,25 @@ Or use --force flag if you want to document anyway.
 
 ## Error Handling
 
-**Directory doesn't exist:**
-- Inform user
-- Suggest checking path
-- Exit gracefully
+See `agents/shared/error-handling.md` for general error patterns.
 
-**Permission denied:**
-- Note permission issue
-- Suggest checking file permissions
-- Exit gracefully
+**Grow-specific errors:**
+- **Directory doesn't exist:** Inform user, suggest checking path, exit gracefully
+- **Permission denied:** Note permission issue, suggest checking file permissions, exit gracefully
+- **Existing CLAUDE.md conflicts:** Show current content, ask if user wants to update, never silently overwrite
+- **Empty or minimal directory:** Note insufficient content, suggest waiting for more code, exit unless --force used
 
-**Existing CLAUDE.md conflicts:**
-- Show current content
-- Ask if user wants to update or cancel
-- Never silently overwrite
+## Best Practices & Philosophy
 
-**Empty or minimal directory:**
-- Note insufficient content
-- Suggest waiting for more code
-- Exit unless --force used
+See `agents/shared/principles.md` for core principles on premature documentation, ruthless conciseness, and focus on "why not what".
 
-## Best Practices
+See `agents/shared/quality-filters.md` for detailed guidance on what's worth documenting.
 
-**Don't create prematurely:**
-- Wait for patterns to emerge
-- Better to have no docs than wrong docs
-- Let need become apparent
-
-**Keep it concise:**
-- <200 lines is ideal
-- Focus on high-value information
-- Avoid documenting obvious things
-
-**Focus on why, not what:**
-- Explain decisions, not just structure
-- Document gotchas and insights
-- Note common mistakes to avoid
-
-**Make it actionable:**
-- Include examples if helpful
-- Note how to use patterns
-- Provide testing guidance
-
-## Philosophy
-
-Growing project context should be:
-- Deliberate, not automatic
-- Valuable, not ceremonial
-- Timely, not premature
-- Evolving with the project
-
-Think of CLAUDE.md as the README you wish you had when you started working in that area - written by you, for future you.
-
-The best CLAUDE.md files answer: "What do I wish I knew before working here?"
+Key reminders:
+- Enforce size limits strictly: Root 200 max, Module 150 max
+- Warn at 80% capacity, require pruning before adding
+- Make it actionable: specific gotchas over general advice
+- Think of CLAUDE.md as "What do I wish I knew before working here?"
 
 ## Workflow Hint
 
