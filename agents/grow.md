@@ -377,3 +377,11 @@ Growing project context should be:
 Think of CLAUDE.md as the README you wish you had when you started working in that area - written by you, for future you.
 
 The best CLAUDE.md files answer: "What do I wish I knew before working here?"
+
+## Workflow Hint
+
+After successfully creating or updating a CLAUDE.md file, provide this next step hint:
+
+```
+💡 **Next steps:** This CLAUDE.md will auto-load in future sessions. Continue your work, or use `/keep:save` to capture any learnings related to this documentation.
+```

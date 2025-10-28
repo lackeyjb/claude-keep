@@ -2,7 +2,7 @@
 
 > Lightweight, intelligent project memory for Claude Code
 
-Keep helps you track work, capture learnings as you code, and grow project context naturally through CLAUDE.md files. Claude proactively suggests Keep commands at the right moments - no need to remember workflows or invoke commands manually.
+Keep helps you track work, capture learnings as you code, and grow project context naturally through CLAUDE.md files. Claude detects resumable work at session start and provides workflow hints to help you build a natural cadence.
 
 ## What is Keep?
 
@@ -23,24 +23,30 @@ Keep is a skill + commands system for Claude Code that provides:
 
 ## How Keep Works
 
-**Keep is a proactive skill** - Claude recognizes when you would benefit from project memory and suggests commands naturally during your conversation.
+**Keep provides session continuity and workflow hints** - Claude detects when you have resumable work at the start of a new conversation, and agents provide helpful next-step hints to teach you the natural rhythm.
 
-You don't need to remember commands or invoke them manually. Instead, Claude watches for moments like:
-- **Starting work:** "I'm going to work on issue #42" → Claude suggests `/keep:start 42`
-- **Making decisions:** "I decided to use Redis because..." → Claude suggests `/keep:save`
-- **Completing tasks:** "Tests pass, feature is done" → Claude suggests `/keep:done`
-- **Needing context:** "How does auth work?" → Claude checks for CLAUDE.md, suggests `/keep:grow src/auth/` if missing
+You invoke Keep commands manually as you work:
+- **Starting work:** Run `/keep:start [issue]` to load context and begin tracking
+- **Saving progress:** Run `/keep:save` at natural breakpoints (after features, decisions, or every 30-45 min)
+- **Completing tasks:** Run `/keep:done` when tests pass and you're ready to move on
+- **Growing context:** Run `/keep:grow [directory]` to document patterns in CLAUDE.md files
 
-Keep integrates seamlessly into your workflow without ceremony:
+Keep integrates into your workflow through helpful hints:
 ```
-You: "I learned that the rate limiter must be initialized before the router"
-Claude: "That's an important gotcha! Use /keep:save to capture this learning
-        so you won't have to rediscover it later. Want me to save it?"
-You: "Sure"
-Claude: *captures the learning and tracks it in your work file*
+You: /keep:start 42
+Claude: *loads issue, context, creates tracking file*
+        💡 Next steps: As you work, use /keep:save to checkpoint progress
+        and capture decisions.
+
+You: *work for 45 minutes, implement feature*
+
+You: /keep:save
+Claude: *captures progress and decisions*
+        💡 Next steps: Continue working, or use /keep:done when you've
+        completed the issue and tests pass.
 ```
 
-**You can still invoke commands directly** via `/keep:start`, `/keep:save`, `/keep:done`, and `/keep:grow` - but Claude's proactive suggestions mean you rarely need to.
+**Session resume detection:** When you start a new conversation with active work from a recent session (< 48h), Claude will suggest resuming where you left off.
 
 ## Quick Start
 
@@ -241,32 +247,88 @@ Create or update CLAUDE.md files for project context.
 /keep:start 1234
 
 # Work on implementation...
-# (Keep observes decisions and learnings)
-
-# Save progress checkpoint
+# Save progress periodically
 /keep:save
 
 # Continue working...
+# Save again at natural breakpoints
+/keep:save
 
 # Complete and sync
 /keep:done --close
 ```
 
 **Keep automatically:**
-- Captures 5 decisions about authentication patterns
-- Suggests updating `src/auth/CLAUDE.md` with rate limiting pattern
+- Captures decisions and learnings from your saves
+- Suggests updating `src/auth/CLAUDE.md` when patterns emerge (3+ decisions in same area)
 - Posts comprehensive summary to GitHub issue #1234
 - Recommends issue #1250 as next work (builds on #1234, same area)
+
+## Workflow Patterns & User Cadence
+
+### Natural Rhythm
+
+Keep works best when used at natural checkpoints in your workflow:
+
+**Start of work:**
+- New session? Claude may suggest resuming recent work
+- Starting new issue? Run `/keep:start [issue]`
+- Not sure what to work on? Run `/keep:start` for recommendations
+
+**During work (every 30-45 min or at natural breakpoints):**
+- Made key decisions? Run `/keep:save`
+- Implemented a feature? Run `/keep:save`
+- Learning something non-obvious? Run `/keep:save`
+- Use `--sync` flag if you want to post update to GitHub
+
+**Completing work:**
+- Tests pass and PR up? Run `/keep:done`
+- Keep will summarize, recommend next work, and archive
+- Use `--close` to auto-close issue, `--no-recommend` to skip suggestions
+
+**Context gaps:**
+- Missing docs for a module? Run `/keep:grow [directory]`
+- Keep will analyze and propose CLAUDE.md content
+- Happens automatically after 3+ decisions in same area via `/keep:save`
+
+### Example Session
+
+```bash
+# Morning: Start fresh
+/keep:start 1234
+
+# Work for 45 min, implement auth middleware
+/keep:save
+
+# Lunch break - checkpoint progress
+/keep:save --sync
+
+# Afternoon: finish implementation
+# ... more work ...
+
+# Tests pass, PR created
+/keep:done --close
+
+# Keep recommends issue #1250 (builds on #1234)
+/keep:start 1250
+```
+
+### Tips
+
+- **Don't overthink it:** Save when it feels natural, not on a strict schedule
+- **Use flags:** `--sync` for GitHub updates, `--no-recommend` to skip suggestions
+- **Let patterns emerge:** After 3+ saves in a directory, Keep suggests documentation
+- **Offline works:** All commands work without GitHub, just skip sync features
 
 ## Features
 
 ### Intelligent Learning Capture
 
-Keep observes your work and automatically captures:
+When you run `/keep:save`, Keep captures from recent conversation:
 - **Decisions** - Technical choices with rationale
 - **Learnings** - Gotchas, non-obvious behaviors, surprises
 - **Patterns** - Approaches that work well
-- **Mistakes** - Common errors to avoid
+- **Progress** - What you accomplished
 
 ### Context Evolution
 

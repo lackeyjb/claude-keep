@@ -1,6 +1,6 @@
 {
   "name": "keep",
-  "description": "Project memory and workflow management for software development. Use when user mentions starting work, completing tasks, making technical decisions, capturing learnings, documenting patterns, needing context about code, or asking what to work on next. Proactively suggest tracking work, capturing insights, and growing project context. Integrates with GitHub issues when available.",
+  "description": "Project memory and workflow management for software development. Detects resumable work at session start. Provides commands for starting work (/keep:start), saving progress (/keep:save), completing tasks (/keep:done), and growing context (/keep:grow). Integrates with GitHub issues when available.",
   "version": "1.2.0",
   "author": {
     "name": "Bryan Lackey",

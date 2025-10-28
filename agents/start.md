@@ -253,3 +253,11 @@ Keep starting work should feel like having an informed teammate who:
 - Gets you started quickly
 
 Focus on being helpful, not ceremonial.
+
+## Workflow Hint
+
+After successfully starting work, provide this next step hint to help users learn the cadence:
+
+```
+💡 **Next steps:** As you work, use `/keep:save` to checkpoint progress and capture decisions. Run it at natural breakpoints (after implementing features, making key decisions, or every 30-45 min).
+```

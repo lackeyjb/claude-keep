@@ -330,3 +330,11 @@ The recommendations should feel like a teammate who knows:
 - What makes sense next
 - What's urgent vs important
 - Your recent context and momentum
+
+## Workflow Hint
+
+After successfully completing work and providing recommendations, add this workflow tip:
+
+```
+💡 **Workflow tip:** When you start the next issue with `/keep:start`, remember to `/keep:save` periodically to capture your progress.
+```

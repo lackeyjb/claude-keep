@@ -250,3 +250,11 @@ Saving progress should be:
 - Never lose user data
 
 Think of it as a helpful teammate taking notes while you work, occasionally suggesting "should we document this pattern?"
+
+## Workflow Hint
+
+After successfully saving progress, provide this next step hint:
+
+```
+💡 **Next steps:** Continue working, or use `/keep:done` when you've completed the issue and tests pass.
+```
